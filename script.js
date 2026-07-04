@@ -1342,7 +1342,7 @@ function closeDetail() {
 // MODE
 // ═══════════════════════════════════════════
 function setMode(mode, btn) {
-  document.querySelectorAll(".mode-pill").forEach(b => b.classList.remove("active"));
+  document.querySelectorAll(".mode-pill, .tab-btn").forEach(b => b.classList.remove("active"));
   if (btn) btn.classList.add("active");
   document.querySelectorAll("[data-mode='" + mode + "']").forEach(b => b.classList.add("active"));
 

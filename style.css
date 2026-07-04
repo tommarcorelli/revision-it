@@ -901,6 +901,9 @@ html:not([data-theme="dark"]) .card:hover{
 }
 
 /* ── RESPONSIVE ──────────────────────────────────── */
+/* ── TAB BAR MOBILE (appli native) ───────────────── */
+.tabbar{display:none}
+
 @media(max-width:860px){
   .layout{grid-template-columns:1fr}
   .nav{grid-template-columns:auto 1fr auto}
@@ -916,23 +919,96 @@ html:not([data-theme="dark"]) .card:hover{
     z-index:200;
     border-right:1px solid var(--border);
     box-shadow:12px 0 48px -12px rgba(0,0,0,.45);
+    padding-bottom:calc(70px + env(safe-area-inset-bottom));
   }
   .sidebar.open{transform:translateX(0)}
+
+  /* Barre d'onglets en bas — glass + liseré dégradé animé */
+  .tabbar{
+    position:fixed;left:0;right:0;bottom:0;z-index:150;
+    display:grid;grid-template-columns:repeat(6,1fr);
+    padding:7px 6px calc(7px + env(safe-area-inset-bottom));
+    background:var(--glass);
+    backdrop-filter:saturate(180%) blur(20px);
+    -webkit-backdrop-filter:saturate(180%) blur(20px);
+    border-top:1px solid var(--glass-brd);
+  }
+  .tabbar::before{
+    content:'';position:absolute;top:-1px;left:0;right:0;height:2px;
+    background:linear-gradient(90deg,var(--accent),#A78BFA,#F472B6,#22D3EE,var(--accent));
+    background-size:300% 100%;animation:navGlow 9s linear infinite;opacity:.85;
+  }
+  .tab-btn{
+    display:flex;flex-direction:column;align-items:center;gap:3px;
+    padding:6px 2px;min-height:48px;background:none;border:none;
+    color:var(--text3);cursor:pointer;position:relative;
+    transition:color var(--transition);-webkit-tap-highlight-color:transparent;
+  }
+  .tab-ico{font-size:20px;line-height:1;transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+  .tab-lbl{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.02em}
+  .tab-btn.active{color:var(--accent)}
+  .tab-btn.active .tab-ico{transform:translateY(-3px) scale(1.18)}
+  .tab-btn.active::after{
+    content:'';position:absolute;top:-5px;left:50%;transform:translateX(-50%);
+    width:24px;height:3px;border-radius:3px;
+    background:linear-gradient(90deg,var(--accent),var(--accent3));
+    box-shadow:0 0 12px var(--accent-glow);
+  }
+  .tab-btn:active .tab-ico{transform:scale(.88)}
+
+  /* Laisser la place à la tabbar */
+  .main{padding-bottom:calc(84px + env(safe-area-inset-bottom))}
+  .onboarding{bottom:calc(80px + env(safe-area-inset-bottom))}
+
+  /* Panneau fiche → bottom-sheet plein écran avec poignée */
+  .overlay{align-items:flex-end;justify-content:stretch}
+  .panel{
+    width:100%;max-width:100%;height:92vh;height:92dvh;
+    border-left:none;border-top:1px solid var(--glass-brd);
+    border-radius:22px 22px 0 0;
+    animation:sheetUp .32s cubic-bezier(.4,.2,.2,1);
+  }
+  .panel::before{
+    content:'';display:block;width:44px;height:5px;border-radius:99px;
+    margin:-.4rem auto 1rem;background:var(--border2);
+  }
+
+  /* Confort tactile */
+  .quiz-opt{padding:14px 16px;font-size:13.5px}
+  .anki-btn{min-height:64px}
+  .mode-pill,.cat-pill{padding:11px 12px;font-size:13.5px}
+  .filter-btn,.filter-group-btn{min-height:42px}
+  /* 16px minimum sur les champs → empêche le zoom automatique iOS */
+  .search-box,.term-input,.quiz-trous-input,.pieges-search{font-size:16px}
 }
+@keyframes sheetUp{from{transform:translateY(48px);opacity:0}to{transform:none;opacity:1}}
+
 @media(max-width:500px){
-  .main{padding:14px}
-  .cards-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+  .main{padding:14px 14px calc(84px + env(safe-area-inset-bottom))}
+  .cards-grid{grid-template-columns:1fr 1fr;gap:10px}
+  .card{padding:14px}
   .nav{padding:0 12px;gap:10px}
   .nav-logo{padding-left:12px;font-size:13px}
+  .nav-logo img{width:26px;height:26px}
   .quiz-container{padding:1.25rem}
   .quiz-question{font-size:14.5px}
   .flashcard-wrap{height:300px}
   .fc-main{font-size:17px}
-  .panel{padding:1.25rem}
+  .panel{padding:1.1rem 1.1rem 1.5rem}
   .detail-title{font-size:18px}
-  .term-shell{min-height:260px}
+  .term-shell{min-height:min(300px,45vh)}
+  .term-help{max-height:120px;overflow-y:auto}
   .reset-box{padding:1.5rem}
-  .big-score{font-size:58px}
+  .big-score{font-size:52px}
+  /* Accueil compact */
+  .home-title{font-size:clamp(24px,7.5vw,32px)}
+  .home-ring{width:76px;height:76px}
+  .home-ring svg{width:76px;height:76px}
+  .home-ring-pct{font-size:14px}
+  .home-progress-card{padding:1rem 1.1rem;gap:1rem}
+  .home-actions{gap:8px}
+  .home-action{padding:.85rem .8rem;gap:.6rem}
+  .ha-icon{width:38px;height:38px;font-size:19px;border-radius:10px}
 }
 
 /* ── HOME DASHBOARD ──────────────────────────────── */

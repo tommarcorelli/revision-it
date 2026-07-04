@@ -289,6 +289,16 @@
   </div>
 </div>
 
+<!-- Barre d'onglets mobile (cachée sur desktop) -->
+<nav class="tabbar" aria-label="Navigation principale">
+  <button class="tab-btn active" data-mode="home" onclick="setMode('home',this)"><span class="tab-ico">🏠</span><span class="tab-lbl">Accueil</span></button>
+  <button class="tab-btn" data-mode="fiches" onclick="setMode('fiches',this)"><span class="tab-ico">📋</span><span class="tab-lbl">Fiches</span></button>
+  <button class="tab-btn" data-mode="quiz" onclick="setMode('quiz',this)"><span class="tab-ico">🎯</span><span class="tab-lbl">Quiz</span></button>
+  <button class="tab-btn" data-mode="anki" onclick="setMode('anki',this)"><span class="tab-ico">🧠</span><span class="tab-lbl">Anki</span></button>
+  <button class="tab-btn" data-mode="terminal" onclick="setMode('terminal',this)"><span class="tab-ico">💻</span><span class="tab-lbl">Terminal</span></button>
+  <button class="tab-btn tab-more" onclick="toggleSidebar()" aria-label="Plus de modes"><span class="tab-ico">☰</span><span class="tab-lbl">Plus</span></button>
+</nav>
+
 <!-- IDs legacy pour compatibilité script.js -->
 <span id="subtitle-text" style="display:none"></span>
 
