@@ -46,6 +46,7 @@ function isFavorite(id) { return favorites.has(id); }
 // ─── Onboarding première visite ───
 function maybeShowOnboarding() {
   try {
+    if (new URLSearchParams(location.search).get("onboarding") === "0") return;
     if (localStorage.getItem("revision_onboarded") === "1") return;
     const el = document.getElementById("onboarding");
     if (el) setTimeout(() => el.classList.add("show"), 700);
@@ -302,16 +303,24 @@ function importProgress(event) {
 }
 function toggleDark() {
   const isDark = document.documentElement.getAttribute("data-theme") === "dark";
-  document.documentElement.setAttribute("data-theme", isDark ? "" : "dark");
-  document.getElementById("dark-toggle").textContent = isDark ? "🌙" : "☀️";
+  applyTheme(!isDark);
   try { localStorage.setItem("revision_dark", isDark ? "0" : "1"); } catch(e){}
 }
 function applyTheme(dark) {
   document.documentElement.setAttribute("data-theme", dark ? "dark" : "");
   const btn = document.getElementById("dark-toggle");
   if (btn) btn.textContent = dark ? "☀️" : "🌙";
+  // Barre de statut du téléphone assortie au thème
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute("content", dark ? "#050814" : "#F7F9FF");
 }
 function loadDark() {
+  // Thème forcé par l'URL (?theme=light|dark) — pratique pour partager/capturer
+  try {
+    const forced = new URLSearchParams(location.search).get("theme");
+    if (forced === "light") { applyTheme(false); return; }
+    if (forced === "dark")  { applyTheme(true);  return; }
+  } catch(e){}
   let pref = null;
   try { pref = localStorage.getItem("revision_dark"); } catch(e){}
   if (pref === "1") { applyTheme(true); return; }
@@ -821,6 +830,7 @@ function init() {
   buildFilters();
   buildQuizCatFilter();
   buildFcCatSelect();
+  bindFcSwipe();
   renderCards();
   updateProgress();
 
@@ -1721,8 +1731,32 @@ function renderFcDots() {
 }
 
 function flipCard() {
+  // Ne pas retourner la carte si le tap était en réalité un swipe
+  const wrap = document.getElementById("fc-wrap");
+  if (wrap && wrap.dataset.swiped) { delete wrap.dataset.swiped; return; }
   fcFlipped = !fcFlipped;
   document.getElementById("flashcard").classList.toggle("flipped", fcFlipped);
+}
+
+// ─── Swipe tactile sur les flashcards (mobile) ───
+function bindFcSwipe() {
+  const wrap = document.getElementById("fc-wrap");
+  if (!wrap || wrap.dataset.swipeBound) return;
+  wrap.dataset.swipeBound = "1";
+  let x0 = null, y0 = null;
+  wrap.addEventListener("touchstart", e => {
+    x0 = e.touches[0].clientX; y0 = e.touches[0].clientY;
+  }, { passive: true });
+  wrap.addEventListener("touchend", e => {
+    if (x0 === null) return;
+    const dx = e.changedTouches[0].clientX - x0;
+    const dy = e.changedTouches[0].clientY - y0;
+    x0 = null;
+    if (Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      wrap.dataset.swiped = "1";              // annule le flip du clic qui suit
+      fcNavigate(dx < 0 ? 1 : -1);
+    }
+  }, { passive: true });
 }
 
 function fcNavigate(dir) {
