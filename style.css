@@ -1007,6 +1007,7 @@ html:not([data-theme="dark"]) .card:hover{
   .filter-btn,.filter-group-btn{min-height:42px}
   /* 16px minimum sur les champs → empêche le zoom automatique iOS */
   .search-box,.term-input,.quiz-trous-input,.pieges-search{font-size:16px}
+  .pieges-search{width:100%}
 }
 @keyframes sheetUp{from{transform:translateY(48px);opacity:0}to{transform:none;opacity:1}}
 
