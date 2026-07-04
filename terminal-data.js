@@ -2422,5 +2422,149 @@ const TERM_SCENARIOS = [
         explication:"'qmrestore' recrée une VM depuis une archive vzdump. Restaurer sur un ID différent est la bonne pratique pour tester une sauvegarde sans risque pour la prod."
       }
     ]
+  },
+  {
+    id:"ddos-investigation",
+    label:"🌊 Investigation DDoS",
+    shell:"linux",
+    desc:"Le site est injoignable. Confirme une attaque DDoS et mets en place une mitigation.",
+    steps:[
+      {
+        titre:"Étape 1 — État des connexions TCP",
+        contexte:"Le serveur ne répond plus. Commence par un résumé de l'état des sockets.",
+        hint:"Utilise 'ss -s' pour le récapitulatif des connexions.",
+        expected:["ss -s","ss"],
+        output:[{t:"info",s:"Total: 18432"},{t:"info",s:"TCP:   18201 (estab 143, closed 21, orphaned 0, synrecv 17994, timewait 21/0)"},{t:"warn",s:"⚠️  17 994 connexions en SYN-RECV, contre ~150 sessions établies habituelles."}],
+        explication:"SYN-RECV = connexions à moitié ouvertes en attente du 3e paquet du handshake. Un pic massif trahit un SYN flood qui sature la table de connexions."
+      },
+      {
+        titre:"Étape 2 — Identifier le type d'attaque",
+        contexte:"Regarde les connexions bloquées en SYN-RECV et leurs sources.",
+        hint:"Utilise 'ss -ant state syn-recv'.",
+        expected:["ss -ant state syn-recv","ss -ant","ss"],
+        output:[{t:"ok",s:"Recv-Q Send-Q   Local Address:Port     Peer Address:Port"},{t:"warn",s:"0      0        192.168.1.100:443      203.0.113.7:51234"},{t:"warn",s:"0      0        192.168.1.100:443      198.51.100.42:33019"},{t:"warn",s:"0      0        192.168.1.100:443      45.77.12.9:60122"},{t:"err",s:"⚠️  Des milliers de SYN depuis des IP toutes différentes qui ne complètent jamais le handshake → flood distribué, adresses probablement usurpées (spoofées)."}],
+        explication:"Chaque source n'envoie qu'un SYN sans jamais répondre. Les IP sont variées et usurpées : bloquer une par une est inutile."
+      },
+      {
+        titre:"Étape 3 — Mesurer la distribution des sources",
+        contexte:"Une seule IP dominante (DoS) ou beaucoup d'IP (DDoS) ? Compte les connexions par source.",
+        hint:"Pipe 'ss -ant' dans awk/sort/uniq pour compter par IP.",
+        expected:["ss -ant | awk","sort | uniq -c","ss -ant","uniq -c"],
+        output:[{t:"ok",s:"   214 203.0.113.7"},{t:"ok",s:"   198 198.51.100.42"},{t:"ok",s:"   187 45.77.12.9"},{t:"info",s:"... des centaines d'IP, chacune avec un volume modéré"},{t:"warn",s:"→ Pas UNE source dominante : l'attaque est bien distribuée (DDoS), pas un simple DoS depuis une IP."}],
+        explication:"Distinguer DoS (une source, blocable) de DDoS (des milliers de sources) oriente toute la stratégie de mitigation."
+      },
+      {
+        titre:"Étape 4 — Activer les SYN cookies",
+        contexte:"Première parade locale contre le SYN flood.",
+        hint:"Utilise 'sysctl -w net.ipv4.tcp_syncookies=1'.",
+        expected:["sysctl -w net.ipv4.tcp_syncookies=1","sysctl","tcp_syncookies"],
+        output:[{t:"ok",s:"net.ipv4.tcp_syncookies = 1"},{t:"info",s:"✅ Les SYN cookies répondent sans allouer d'état pour chaque SYN → la table SYN-RECV ne sature plus."}],
+        explication:"Avec les SYN cookies, le serveur encode l'état dans le numéro de séquence : il n'a plus besoin de réserver de mémoire tant que le handshake n'est pas complété."
+      },
+      {
+        titre:"Étape 5 — Rate-limit et escalade",
+        contexte:"Limite le débit des nouveaux SYN, puis prends la décision d'escalade.",
+        hint:"Utilise 'iptables -A INPUT -p tcp --syn -m limit --limit 25/s --limit-burst 50 -j ACCEPT'.",
+        expected:["iptables","--limit","-m limit"],
+        output:[{t:"ok",s:"Règle ajoutée : nouveaux SYN limités à 25/s (burst 50)."},{t:"warn",s:"⚠️  Le rate-limit local soulage le CPU mais ne protège PAS d'une saturation de ta bande passante en amont."},{t:"info",s:"→ Escalader chez l'opérateur / basculer sur un service de scrubbing (CDN, anti-DDoS) qui filtre AVANT ton lien."},{t:"head",s:"=== 🏆 SCÉNARIO TERMINÉ ==="},{t:"ok",s:"Tu as : détecté le pic SYN-RECV, confirmé un SYN flood distribué, mesuré la dispersion, activé les SYN cookies et posé un rate-limit."},{t:"ok",s:"Retenir : mitigation locale (SYN cookies, limit) en 1re ligne, mais la vraie parade d'un DDoS volumétrique se joue EN AMONT."}],
+        explication:"Un pare-feu local ne peut rien contre un lien saturé : les paquets sont déjà arrivés. Seule une protection en amont (opérateur, CDN, scrubbing) absorbe un DDoS volumétrique."
+      }
+    ]
+  },
+  {
+    id:"threat-hunting-ps",
+    label:"🎯 Chasse aux menaces (PowerShell)",
+    shell:"powershell",
+    desc:"Un poste a un comportement anormal. Traque l'attaquant via ses TTP (MITRE ATT&CK).",
+    steps:[
+      {
+        titre:"Étape 1 — Processus et lignes de commande",
+        contexte:"Cherche un processus au comportement suspect avec sa ligne de commande complète.",
+        hint:"Utilise 'Get-CimInstance Win32_Process | Select ProcessId,Name,CommandLine'.",
+        expected:["Get-CimInstance Win32_Process","Get-CimInstance","Get-WmiObject Win32_Process"],
+        output:[{t:"ok",s:"ProcessId Name           CommandLine"},{t:"ok",s:"     1240 explorer.exe   C:\\Windows\\explorer.exe"},{t:"warn",s:"     6620 powershell.exe powershell -nop -w hidden -enc SQBFAFgAKABuAGUAdwAtAG8AYgBq..."},{t:"err",s:"⚠️  PowerShell lancé caché (-w hidden) avec une commande encodée (-enc) → technique classique (MITRE T1059.001 / T1027)."}],
+        explication:"Une commande PowerShell encodée en Base64 et exécutée en fenêtre cachée est un marqueur fort d'activité malveillante."
+      },
+      {
+        titre:"Étape 2 — Connexions réseau du processus",
+        contexte:"Ce PowerShell caché communique-t-il vers l'extérieur ?",
+        hint:"Utilise 'Get-NetTCPConnection -OwningProcess 6620'.",
+        expected:["Get-NetTCPConnection -OwningProcess 6620","Get-NetTCPConnection"],
+        output:[{t:"ok",s:"LocalAddress LocalPort RemoteAddress  RemotePort State       OwningProcess"},{t:"warn",s:"192.168.1.50 49512     45.33.32.156   443        Established 6620"},{t:"err",s:"⚠️  Le PowerShell caché maintient une connexion sortante vers 45.33.32.156:443 → canal de Command & Control (T1071)."}],
+        explication:"Un beacon C2 se cache souvent en HTTPS (443). Corréler process suspect + connexion sortante persistante = forte présomption de C2."
+      },
+      {
+        titre:"Étape 3 — Persistance : clés Run",
+        contexte:"L'attaquant a-t-il assuré sa relance au démarrage ?",
+        hint:"Utilise 'Get-ItemProperty HKLM:\\Software\\Microsoft\\Windows\\CurrentVersion\\Run'.",
+        expected:["Get-ItemProperty","CurrentVersion\\Run","Run"],
+        output:[{t:"ok",s:"OneDrive : C:\\Users\\jdupont\\AppData\\Local\\Microsoft\\OneDrive\\OneDrive.exe /background"},{t:"warn",s:"Updater  : powershell -w hidden -enc SQBFAFgAKAB... (même charge que le PID 6620)"},{t:"err",s:"⚠️  Clé Run 'Updater' → relance la charge à chaque ouverture de session (persistance, MITRE T1547.001)."}],
+        explication:"Les clés Run (HKLM/HKCU) sont le mécanisme de persistance le plus courant : la charge se relance automatiquement à chaque logon."
+      },
+      {
+        titre:"Étape 4 — Persistance : tâches planifiées",
+        contexte:"Les attaquants multiplient les persistances. Cherche une tâche hors Microsoft.",
+        hint:"Utilise 'Get-ScheduledTask | Where-Object {$_.TaskPath -notlike \"\\Microsoft\\*\"}'.",
+        expected:["Get-ScheduledTask","schtasks"],
+        output:[{t:"ok",s:"TaskPath  TaskName        State"},{t:"warn",s:"\\         SystemUpdateSvc Ready"},{t:"warn",s:"  → Action : powershell.exe -nop -w hidden -enc SQBFAFgAKAB..."},{t:"err",s:"⚠️  Tâche planifiée hors \\Microsoft\\ exécutant la même charge → 2e mécanisme de persistance (T1053.005)."}],
+        explication:"Combiner clé Run + tâche planifiée permet à l'attaquant de survivre à un nettoyage partiel. Il faut traquer TOUTES les persistances."
+      },
+      {
+        titre:"Étape 5 — Reconstituer la chaîne d'attaque",
+        contexte:"Comment tout a commencé ? Remonte aux journaux de sécurité.",
+        hint:"Utilise 'Get-WinEvent -FilterHashtable @{LogName=\"Security\";Id=4688} -MaxEvents 5'.",
+        expected:["Get-WinEvent","4688","4624","Get-EventLog"],
+        output:[{t:"ok",s:"TimeCreated       Id   Message"},{t:"info",s:"12/06 08:40:55    4688 Process create: powershell.exe (parent: winword.exe)"},{t:"warn",s:"12/06 08:41:03    4624 Logon Type 3 (réseau) — compte jdupont depuis 45.33.32.156"},{t:"err",s:"⚠️  Enchaînement : ouverture d'un document Word → PowerShell (macro, T1566/T1204) → C2 → logon réseau depuis l'IP du C2."},{t:"head",s:"=== 🏆 SCÉNARIO TERMINÉ ==="},{t:"ok",s:"Tu as tracé la chaîne ATT&CK : accès initial (macro Word) → exécution (PS encodé) → C2 (443) → persistance (Run + tâche planifiée)."},{t:"info",s:"→ Contenir : isoler le poste, tuer le PID 6620, supprimer les 2 persistances, bloquer 45.33.32.156, réinitialiser jdupont."}],
+        explication:"Cartographier chaque observation sur MITRE ATT&CK transforme une liste d'indices en un récit d'attaque exploitable pour la réponse à incident."
+      }
+    ]
+  },
+  {
+    id:"email-auth-check",
+    label:"📧 Diag e-mail SPF/DKIM/DMARC",
+    shell:"linux",
+    desc:"Des e-mails de ton domaine sont usurpés. Vérifie SPF, DKIM et DMARC avec dig, puis durcis.",
+    steps:[
+      {
+        titre:"Étape 1 — Vérifier l'enregistrement SPF",
+        contexte:"Commence par voir quels serveurs sont autorisés à émettre pour le domaine.",
+        hint:"Utilise 'dig +short TXT exemple.fr'.",
+        expected:["dig +short TXT exemple.fr","dig TXT exemple.fr","dig"],
+        output:[{t:"ok",s:"\"v=spf1 include:_spf.google.com include:mailjet.com ~all\""},{t:"warn",s:"⚠️  L'enregistrement SPF se termine par ~all (softfail) : un e-mail d'une IP non listée est marqué douteux, mais PAS rejeté."}],
+        explication:"SPF publie les serveurs autorisés. ~all (softfail) tolère les non-conformes ; -all (hardfail) les rejette. Le softfail laisse une marge d'usurpation."
+      },
+      {
+        titre:"Étape 2 — Vérifier la clé DKIM",
+        contexte:"Les e-mails sont-ils signés cryptographiquement ?",
+        hint:"Utilise 'dig +short TXT google._domainkey.exemple.fr'.",
+        expected:["dig +short TXT google._domainkey.exemple.fr","_domainkey","dig"],
+        output:[{t:"ok",s:"\"v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC7Vd...\""},{t:"ok",s:"✅ Clé publique DKIM présente pour le sélecteur 'google' → les e-mails signés sont vérifiables."}],
+        explication:"DKIM signe chaque message avec une clé privée ; le récepteur valide via cette clé publique publiée en DNS. Cela garantit l'intégrité et l'origine."
+      },
+      {
+        titre:"Étape 3 — Vérifier la politique DMARC",
+        contexte:"C'est DMARC qui décide quoi faire des e-mails non authentifiés.",
+        hint:"Utilise 'dig +short TXT _dmarc.exemple.fr'.",
+        expected:["dig +short TXT _dmarc.exemple.fr","_dmarc","dig"],
+        output:[{t:"warn",s:"\"v=DMARC1; p=none; rua=mailto:dmarc@exemple.fr\""},{t:"err",s:"⚠️  Politique p=none : DMARC se contente d'OBSERVER (rapports). Il ne met rien en quarantaine ni ne rejette → les usurpations aboutissent."}],
+        explication:"p=none est utile au démarrage pour collecter des rapports (rua), mais laisse l'usurpation passer. C'est la cause directe du spoofing constaté."
+      },
+      {
+        titre:"Étape 4 — Poser le diagnostic",
+        contexte:"Croise les trois résultats pour conclure.",
+        hint:"Isole la politique appliquée, ex. 'dig +short TXT _dmarc.exemple.fr | grep -o \"p=[a-z]*\"'.",
+        expected:["grep","p="],
+        output:[{t:"ok",s:"p=none"},{t:"err",s:"Diagnostic : SPF en softfail (~all) + DMARC en p=none = domaine usurpable. Rien ne bloque un e-mail frauduleux affichant @exemple.fr."},{t:"info",s:"DKIM est en place (bien), mais sans DMARC contraignant il ne suffit pas à faire rejeter les faux."}],
+        explication:"L'usurpation est possible car aucun maillon n'est en mode bloquant. SPF et DKIM constatent, mais c'est DMARC qui applique la sanction."
+      },
+      {
+        titre:"Étape 5 — Durcir et re-vérifier",
+        contexte:"Publie une politique DMARC contraignante puis contrôle-la.",
+        hint:"Après mise à jour de la zone, relance 'dig +short TXT _dmarc.exemple.fr'.",
+        expected:["dig +short TXT _dmarc.exemple.fr","_dmarc","dig"],
+        output:[{t:"ok",s:"\"v=DMARC1; p=quarantine; rua=mailto:dmarc@exemple.fr; pct=100\""},{t:"ok",s:"✅ DMARC durci en p=quarantine : les e-mails non authentifiés partent en spam. Étape suivante : p=reject."},{t:"info",s:"→ Passer aussi SPF en -all une fois TOUS les émetteurs légitimes recensés (sinon faux positifs)."},{t:"head",s:"=== 🏆 SCÉNARIO TERMINÉ ==="},{t:"ok",s:"Tu as : lu SPF/DKIM/DMARC, identifié la faille (softfail + p=none), puis durci la politique par étapes."},{t:"info",s:"Ordre de déploiement DMARC : p=none (observer) → p=quarantine → p=reject."}],
+        explication:"Durcir DMARC d'un coup en p=reject sans avoir recensé les émetteurs légitimes bloque des e-mails valides. La montée progressive, guidée par les rapports rua, évite ce piège."
+      }
+    ]
   }
 ];
