@@ -380,16 +380,19 @@ document.addEventListener("keydown", e => {
     if (searchBox && document.activeElement === searchBox && searchBox.value) {
       searchBox.value = ""; renderCards(); return;
     }
+    // Fermer l'overlay de recherche mobile s'il est ouvert (et vide)
+    const navEl = document.querySelector(".nav");
+    if (navEl && navEl.classList.contains("search-open")) { toggleMobileSearch(false); return; }
     closeDetail();
   }
   // Navigation dans le panel fiche
   if (document.getElementById("overlay").classList.contains("open")) {
     if (e.key === "ArrowRight") {
-      const nx = document.querySelector(".nav-btn:last-child:not(:disabled)");
+      const nx = document.querySelector(".panel-nav .nav-btn:last-child:not(:disabled)");
       if (nx) nx.click();
     }
     if (e.key === "ArrowLeft") {
-      const pv = document.querySelector(".nav-btn:first-child:not(:disabled)");
+      const pv = document.querySelector(".panel-nav .nav-btn:first-child:not(:disabled)");
       if (pv) pv.click();
     }
     // Touches 1-5 pour le niveau de maîtrise
@@ -836,7 +839,9 @@ function init() {
     renderCards();
   }, 150));
 
-  setMode("home");
+  // Route initiale : deep-link (#quiz, #fiche-105…) ou accueil
+  applyRoute(location.hash);
+  if (!location.hash) { try { history.replaceState(null, "", "#home"); } catch(e){} }
 }
 
 function buildFilters() {
@@ -1285,6 +1290,18 @@ function openDetail(id, indexInFiltered) {
   const panel = document.getElementById("panel");
   if (panel) panel.scrollTop = 0;
   document.getElementById("overlay").classList.add("open");
+
+  // Route de la fiche : 1re ouverture = push (retour = fermer),
+  // navigation Préc./Suiv. = replace (retour = fermer directement)
+  if (!routeSuppress) {
+    try {
+      const h = "#fiche-" + id;
+      if (location.hash !== h) {
+        if (history.state && history.state.fiche) history.replaceState({fiche:id}, "", h);
+        else history.pushState({fiche:id}, "", h);
+      }
+    } catch(e){}
+  }
 }
 
 function escHtml(str) {
@@ -1334,9 +1351,81 @@ function setLevel(id, lv) {
 function handleOverlayClick(e) {
   if (e.target === document.getElementById("overlay")) closeDetail();
 }
-function closeDetail() {
-  document.getElementById("overlay").classList.remove("open");
+// fromRoute = true quand la fermeture vient du bouton retour (popstate)
+function closeDetail(fromRoute) {
+  const ov = document.getElementById("overlay");
+  const wasOpen = ov && ov.classList.contains("open");
+  if (ov) ov.classList.remove("open");
+  if (fromRoute || !wasOpen) return;
+  // Fermeture manuelle (✕, Échap, clic dehors) → dépiler l'entrée d'historique
+  if (history.state && history.state.fiche) {
+    try { history.back(); } catch(e){}
+  } else if (/^#fiche-/.test(location.hash)) {
+    // Arrivée directe par deep-link : pas d'entrée à dépiler, on nettoie le hash
+    try { history.replaceState(null, "", "#" + (currentMode || "fiches")); } catch(e){}
+  }
 }
+
+// ═══════════════════════════════════════════
+// ROUTAGE & BOUTON RETOUR (History API)
+// Chaque écran a son hash (#quiz, #fiche-105…) : le bouton retour
+// du téléphone/navigateur ferme la fiche, le tiroir, ou revient
+// au mode précédent — comme une vraie application.
+// ═══════════════════════════════════════════
+let routeSuppress = false;  // true = changement piloté par l'historique (ne pas re-pousser)
+let currentMode = null;
+const ROUTE_MODES = {home:1,fiches:1,quiz:1,flashcard:1,stats:1,terminal:1,anki:1,pieges:1,exam:1};
+
+function pushRoute(hash, replace) {
+  try {
+    if (location.hash === hash) return;
+    if (replace) history.replaceState(null, "", hash);
+    else history.pushState(null, "", hash);
+  } catch(e){}
+}
+
+function applyRoute(hash) {
+  const m = (hash || "").replace(/^#/, "");
+  routeSuppress = true;
+  try {
+    if (m.indexOf("fiche-") === 0) {
+      const id = parseInt(m.slice(6), 10);
+      if (currentMode !== "fiches") setMode("fiches", document.querySelector('[data-mode="fiches"]'));
+      if (FICHES.some(f => f.id === id)) openDetail(id);
+    } else {
+      closeDetail(true);
+      const mode = ROUTE_MODES[m] ? m : "home";
+      if (mode !== currentMode) setMode(mode, document.querySelector('[data-mode="' + mode + '"]'));
+    }
+  } finally { routeSuppress = false; }
+}
+
+window.addEventListener("popstate", () => {
+  const sb = document.getElementById("sidebar");
+  if (sb && sb.classList.contains("open")) { closeSidebar(true); return; }
+  applyRoute(location.hash);
+});
+
+// ─── Recherche mobile (overlay plein largeur dans la nav) ───
+function toggleMobileSearch(open) {
+  const nav = document.querySelector(".nav");
+  if (!nav) return;
+  nav.classList.toggle("search-open", open);
+  nav.classList.remove("nav-hidden");
+  const sb = document.getElementById("search-box");
+  if (open && sb) setTimeout(() => sb.focus(), 60);
+  else if (sb) sb.blur();
+}
+
+// ─── Nav du haut masquée quand on scrolle vers le bas (mobile) ───
+let lastScrollY = 0;
+window.addEventListener("scroll", () => {
+  const nav = document.querySelector(".nav");
+  if (!nav) return;
+  const y = window.scrollY;
+  nav.classList.toggle("nav-hidden", y > lastScrollY && y > 90 && !nav.classList.contains("search-open"));
+  lastScrollY = y;
+}, { passive: true });
 
 // ═══════════════════════════════════════════
 // MODE
@@ -1350,7 +1439,13 @@ function setMode(mode, btn) {
   views.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = "none"; });
   const map = {home:"home-view",fiches:"fiche-view",quiz:"quiz-view",flashcard:"flashcard-view",stats:"stats-view",terminal:"terminal-view",anki:"anki-view",pieges:"pieges-view",exam:"exam-view"};
   const target = document.getElementById(map[mode]);
-  if (target) target.style.display = "";
+  if (target) {
+    target.style.display = "";
+    // Petite transition d'écran (rejouée à chaque changement de mode)
+    target.classList.remove("view-in");
+    void target.offsetWidth;
+    target.classList.add("view-in");
+  }
 
   if (mode === "home")      renderHome();
   if (mode === "quiz")      showQuizStart();
@@ -1361,7 +1456,14 @@ function setMode(mode, btn) {
   if (mode === "pieges")    initPieges();
   if (mode === "exam")      showExamStart();
 
-  closeSidebar(); // referme le tiroir mobile après sélection d'un mode
+  currentMode = mode;
+  if (!routeSuppress) pushRoute("#" + mode);
+  // Retour haptique léger depuis la tab bar mobile
+  if (btn && btn.classList && btn.classList.contains("tab-btn")) {
+    try { if (navigator.vibrate) navigator.vibrate(8); } catch(e){}
+  }
+
+  closeSidebar(true); // referme le tiroir mobile sans toucher à l'historique
 }
 
 // ── Menu mobile (tiroir coulissant) ──────────────────
@@ -1374,15 +1476,26 @@ function toggleSidebar() {
   const btn = document.querySelector(".nav-toggle");
   if (btn) btn.setAttribute("aria-expanded", open);
   document.body.style.overflow = open ? "hidden" : "";
+  if (open) {
+    const nav = document.querySelector(".nav");
+    if (nav) nav.classList.remove("nav-hidden");
+    // Le bouton retour du téléphone fermera le tiroir
+    try { history.pushState({drawer:1}, ""); } catch(e){}
+  }
 }
-function closeSidebar() {
+// skipHistory = true quand l'appel vient de setMode ou du popstate
+function closeSidebar(skipHistory) {
   const sb = document.getElementById("sidebar");
+  const wasOpen = sb && sb.classList.contains("open");
   if (sb) sb.classList.remove("open");
   const bd = document.getElementById("sidebar-backdrop");
   if (bd) bd.classList.remove("open");
   const btn = document.querySelector(".nav-toggle");
   if (btn) btn.setAttribute("aria-expanded", "false");
   document.body.style.overflow = "";
+  if (!skipHistory && wasOpen && history.state && history.state.drawer) {
+    try { history.back(); } catch(e){}
+  }
 }
 
 function renderHome() {

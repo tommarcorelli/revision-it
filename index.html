@@ -38,8 +38,10 @@
     </svg>
     <input class="search-box" type="text" id="search-box" placeholder="Rechercher une fiche…" autocomplete="off" aria-label="Rechercher une fiche">
     <span class="nav-count" id="nav-count" aria-live="polite"></span>
+    <button class="search-close" onclick="toggleMobileSearch(false)" aria-label="Fermer la recherche">✕</button>
   </div>
   <div class="nav-right">
+    <button class="nav-btn nav-search-toggle" onclick="toggleMobileSearch(true)" title="Rechercher" aria-label="Rechercher">🔍</button>
     <div class="stat-chip">Fiches : <span id="stat-total">0</span></div>
     <div class="stat-chip">Vues : <span id="stat-seen">0</span></div>
     <div class="stat-chip">Maîtrisées : <span id="stat-mastered">0</span></div>

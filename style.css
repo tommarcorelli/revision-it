@@ -903,12 +903,34 @@ html:not([data-theme="dark"]) .card:hover{
 /* ── RESPONSIVE ──────────────────────────────────── */
 /* ── TAB BAR MOBILE (appli native) ───────────────── */
 .tabbar{display:none}
+.nav-search-toggle,.search-close{display:none}
+/* Transition d'écran entre les modes */
+.view-in{animation:viewIn .3s cubic-bezier(.4,.2,.2,1)}
+@keyframes viewIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 
 @media(max-width:860px){
   .layout{grid-template-columns:1fr}
-  .nav{grid-template-columns:auto 1fr auto}
+  .nav{grid-template-columns:auto 1fr auto;transition:transform .28s ease}
+  .nav.nav-hidden{transform:translateY(-100%)}
   .nav-right .stat-chip{display:none}
   .nav-toggle{display:flex}
+  /* Recherche : cachée par défaut, bouton 🔍 l'ouvre en plein écran */
+  .nav-search-wrap{display:none}
+  .nav-search-toggle{display:inline-flex;align-items:center;justify-content:center}
+  .nav.search-open .nav-search-wrap{
+    display:flex;position:absolute;inset:0;z-index:20;max-width:none;
+    align-items:center;gap:8px;padding:9px 10px;
+    background:var(--bg2);border-bottom:1px solid var(--glass-brd);
+    animation:fadeIn .18s ease;
+  }
+  .nav.search-open .search-box{flex:1;width:auto;height:100%;padding-right:74px}
+  .nav.search-open .nav-count{right:60px}
+  .search-close{
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+    width:40px;height:40px;border-radius:10px;
+    border:1px solid var(--border);background:var(--bg3);
+    color:var(--text2);font-size:15px;cursor:pointer;
+  }
   /* Sidebar → tiroir coulissant off-canvas */
   .sidebar{
     display:block;position:fixed;top:var(--nav-h);left:0;
