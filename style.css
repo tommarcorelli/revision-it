@@ -1015,9 +1015,13 @@ html:not([data-theme="dark"]) .card:hover{
   .main{padding:14px 14px calc(84px + env(safe-area-inset-bottom))}
   .cards-grid{grid-template-columns:1fr 1fr;gap:10px}
   .card{padding:14px}
-  .nav{padding:0 12px;gap:10px}
-  .nav-logo{padding-left:12px;font-size:13px}
+  .nav{padding:0 calc(10px + env(safe-area-inset-right)) 0 0;gap:8px}
+  .nav-logo{padding-left:calc(12px + env(safe-area-inset-left));font-size:13px}
   .nav-logo img{width:26px;height:26px}
+  /* Désencombre la barre : la couleur d'accent reste dispo dans ⚙️ Paramètres */
+  .accent-menu-wrap{display:none}
+  .nav-right{gap:6px}
+  .nav-btn{padding:7px 10px}
   .quiz-container{padding:1.25rem}
   .quiz-question{font-size:14.5px}
   .flashcard-wrap{height:300px}
