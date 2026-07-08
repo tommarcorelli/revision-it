@@ -3,7 +3,7 @@
    Light & Dark redesignés · Geist + JetBrains Mono
    ───────────────────────────────────────────────────────── */
 
-@import url('https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+/* Police chargée de façon non bloquante depuis index.html (voir <link rel="preload"> + fallback) */
 
 :root{
   /* LIGHT — "aurora" : mesh multicolore lumineux, glass blanc, ombres colorées */

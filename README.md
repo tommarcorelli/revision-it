@@ -141,4 +141,4 @@ Stratégie network-first sur `.html`, `.js`, `.css` (toujours la dernière versi
 
 **À chaque déploiement majeur** : monter le numéro de version dans `CACHE_NAME` de `sw.js` pour invalider le cache des utilisateurs existants.
 
-Version actuelle : `revision-it-v12`
+Version actuelle : `revision-it-v19`

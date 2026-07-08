@@ -13,6 +13,16 @@ let favFilterOn = false;         // filtre "★ Favoris" actif
 let dailyReviewOn = false;       // mode "Révision du jour" actif
 let dailyList = [];              // fiches sélectionnées pour la révision du jour
 
+// Normalise une chaîne pour une recherche insensible à la casse ET aux accents
+// (ex: "securite" retrouve "Sécurité"). Utilisé par toutes les recherches de l'app.
+function normalizeSearch(s) {
+  return (s || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
 // ─── Persistence ───
 function saveSeen() {
   try { localStorage.setItem("revision_seen", JSON.stringify([...seen])); } catch(e){}
@@ -175,9 +185,11 @@ function srsUpdate(id, quality) {
   saveSrs();
 
   // Synchroniser le niveau de maîtrise (level) avec le SRS
-  if (quality === 0) { levels[id] = Math.max(1, (levels[id] || 1)); }
-  else if (quality === 1) { levels[id] = Math.max(2, (levels[id] || 2)); }
-  else if (quality === 2) { levels[id] = Math.max(3, (levels[id] || 3)); }
+  // Le niveau reflète la dernière réponse : un échec doit pouvoir faire redescendre
+  // une fiche déjà "maîtrisée" (avant, Math.max empêchait toute baisse — bug).
+  if (quality === 0) { levels[id] = 1; }
+  else if (quality === 1) { levels[id] = 2; }
+  else if (quality === 2) { levels[id] = 4; }
   else { levels[id] = 5; }
   saveLevels();
   seen.add(id); saveSeen();
@@ -227,12 +239,15 @@ function confirmReset() {
 function exportProgress() {
   const data = {
     type: "revision-it-progress",
-    version: 1,
+    version: 2,
     exportedAt: new Date().toISOString(),
     seen: [...seen],
     levels: levels,
     srsData: srsData,
     quizBest: loadQuizBest(),
+    favorites: [...favorites],
+    quizHistory: getQuizHistory(),
+    activity: [...getActivityDays()],
     dark: (() => { try { return localStorage.getItem("revision_dark"); } catch(e){ return null; } })()
   };
   const blob = new Blob([JSON.stringify(data, null, 2)], {type: "application/json"});
@@ -277,6 +292,16 @@ function importProgress(event) {
       if (data.quizBest) {
         try { localStorage.setItem("revision_quiz_best", data.quizBest); } catch(err){}
         document.getElementById("stat-quiz").textContent = data.quizBest + "%";
+      }
+      if (Array.isArray(data.favorites)) {
+        favorites = new Set(data.favorites);
+        saveFavorites();
+      }
+      if (Array.isArray(data.quizHistory)) {
+        try { localStorage.setItem("revision_quiz_history", JSON.stringify(data.quizHistory)); } catch(err){}
+      }
+      if (Array.isArray(data.activity)) {
+        try { localStorage.setItem("revision_activity", JSON.stringify(data.activity)); } catch(err){}
       }
       if (data.dark === "1" || data.dark === "0") {
         try { localStorage.setItem("revision_dark", data.dark); } catch(err){}
@@ -1046,7 +1071,7 @@ function exitDailyReview(silent) {
 }
 
 function renderCards() {
-  const search = (document.getElementById("search-box").value || "").toLowerCase().trim();
+  const search = normalizeSearch(document.getElementById("search-box").value);
   const sortVal = document.getElementById("sort-select").value;
   const grid = document.getElementById("cards-grid");
   const noRes = document.getElementById("no-results");
@@ -1061,13 +1086,13 @@ function renderCards() {
   }
   if (search) {
     filtered = filtered.filter(f =>
-      f.titre.toLowerCase().includes(search) ||
-      (f.sub && f.sub.toLowerCase().includes(search)) ||
-      (f.def && f.def.toLowerCase().includes(search)) ||
-      (f.piege && f.piege.toLowerCase().includes(search)) ||
-      (f.retenir && f.retenir.toLowerCase().includes(search)) ||
-      (f.points && f.points.some(p => p.toLowerCase().includes(search))) ||
-      (f.keywords && f.keywords.some(k => k.toLowerCase().includes(search)))
+      normalizeSearch(f.titre).includes(search) ||
+      (f.sub && normalizeSearch(f.sub).includes(search)) ||
+      (f.def && normalizeSearch(f.def).includes(search)) ||
+      (f.piege && normalizeSearch(f.piege).includes(search)) ||
+      (f.retenir && normalizeSearch(f.retenir).includes(search)) ||
+      (f.points && f.points.some(p => normalizeSearch(p).includes(search))) ||
+      (f.keywords && f.keywords.some(k => normalizeSearch(k).includes(search)))
     );
   }
   if (weakFilterOn) {
@@ -1869,7 +1894,7 @@ function initPieges() {
   if (input && !input.dataset.bound) {
     input.dataset.bound = "1";
     input.addEventListener("input", () => {
-      piegesSearchTerm = input.value.trim().toLowerCase();
+      piegesSearchTerm = normalizeSearch(input.value);
       renderPieges();
     });
   }
@@ -1902,9 +1927,9 @@ function renderPieges() {
   if (piegesCatActive) list = list.filter(f => f.cat === piegesCatActive);
   if (piegesSearchTerm) {
     list = list.filter(f =>
-      f.titre.toLowerCase().includes(piegesSearchTerm) ||
-      f.piege.toLowerCase().includes(piegesSearchTerm) ||
-      (f.keywords || []).some(k => k.toLowerCase().includes(piegesSearchTerm))
+      normalizeSearch(f.titre).includes(piegesSearchTerm) ||
+      normalizeSearch(f.piege).includes(piegesSearchTerm) ||
+      (f.keywords || []).some(k => normalizeSearch(k).includes(piegesSearchTerm))
     );
   }
 
