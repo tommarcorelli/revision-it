@@ -1576,18 +1576,21 @@ function renderHome() {
   }).filter(Boolean).sort((a, b) => a.avg - b.avg).slice(0, 3);
 
   const weakCatsHtml = catScores.length === 0 ? '' : `
-    <div class="home-section-label">// CATÉGORIES À RENFORCER</div>
+    <div class="home-section-label" style="display:flex;justify-content:space-between;align-items:center">
+      <span>// CATÉGORIES À RENFORCER</span>
+      <span style="cursor:pointer;color:var(--accent);font-size:12px;font-weight:600" onclick="setMode('stats',document.querySelector('[data-mode=stats]'))">Voir toutes les catégories →</span>
+    </div>
     <div class="home-weak-cats">
       ${catScores.map(({ cat, avg, seenN, total }) => {
         const pct = Math.round((seenN / total) * 100);
         const color = avg < 1.5 ? '#ef4444' : avg < 2.5 ? '#f59e0b' : 'var(--accent)';
-        return `<div class="home-weak-cat" onclick="openCategory('${cat}')">
+        return `<div class="home-weak-cat" onclick="startCategoryReview('${cat}')">
           <div class="home-weak-cat-head">
             <span class="detail-badge badge-${cat}">${catLabels[cat]}</span>
             <span class="home-weak-score" style="color:${color}">${avg.toFixed(1)} ★</span>
           </div>
           <div class="home-weak-bar"><div class="home-weak-fill" style="width:${pct}%;background:${color}"></div></div>
-          <div class="home-weak-sub">${seenN}/${total} vues</div>
+          <div class="home-weak-sub">${seenN}/${total} vues · réviser →</div>
         </div>`;
       }).join('')}
     </div>`;
@@ -1709,6 +1712,20 @@ function buildFcCatSelect() {
     opt.textContent = catLabels[cat] + " (" + count + ")";
     sel.appendChild(opt);
   });
+}
+
+// Lance une session de révision ciblée sur une catégorie : bascule sur les
+// flashcards filtrées, fiches les moins maîtrisées en premier.
+function startCategoryReview(cat) {
+  setMode("flashcard", document.querySelector('[data-mode="flashcard"]'));
+  const sel = document.getElementById("fc-cat-select");
+  if (sel) sel.value = cat;
+  initFlashcards();
+  fcList = [...fcList].sort((a, b) => (levels[a.id] || 0) - (levels[b.id] || 0));
+  fcIndex = 0;
+  fcFlipped = false;
+  fcSeen = new Set();
+  renderFlashcard();
 }
 
 function initFlashcards() {
@@ -1859,24 +1876,37 @@ function renderStats() {
   const container = document.getElementById("cat-stats-container");
   container.innerHTML = "";
 
+  // Score de maîtrise par catégorie : moyenne des niveaux (0 pour une fiche jamais vue)
+  // ramenée en %. Trié du plus faible au plus fort pour prioriser les révisions.
+  const catStats = catOrder.map(cat => {
+    const fiches = FICHES.filter(f => f.cat === cat);
+    const total = fiches.length;
+    if (total === 0) return null;
+    const done = fiches.filter(f => seen.has(f.id)).length;
+    const mastered = fiches.filter(f => (levels[f.id] || 0) >= 4).length;
+    const avgLevel = fiches.reduce((s, f) => s + (levels[f.id] || 0), 0) / total;
+    const masteryPct = Math.round((avgLevel / 5) * 100);
+    return { cat, total, done, mastered, masteryPct };
+  }).filter(Boolean).sort((a, b) => a.masteryPct - b.masteryPct);
+
   if (seen.size === 0) {
-    container.innerHTML = '<div style="text-align:center;padding:2rem 1rem;color:var(--text3);font-size:14px">' +
+    container.innerHTML = '<div style="text-align:center;padding:1rem 1rem 1.5rem;color:var(--text3);font-size:14px">' +
       '📚 Commence à consulter des fiches pour voir ta progression par catégorie ici.</div>';
-    return;
   }
 
-  catOrder.forEach(cat => {
-    const total = FICHES.filter(f => f.cat === cat).length;
-    if (total === 0) return;
-    const done = FICHES.filter(f => f.cat === cat && seen.has(f.id)).length;
-    const mastered = FICHES.filter(f => f.cat === cat && (levels[f.id] || 0) >= 4).length;
-    const pct = Math.round((done / total) * 100);
+  catStats.forEach(({ cat, total, done, mastered, masteryPct }) => {
+    const color = masteryPct < 35 ? "#ef4444" : masteryPct < 70 ? "#f59e0b" : "var(--accent)";
     const row = document.createElement("div");
-    row.className = "cat-stat-row";
+    row.className = "cat-stat-row cat-stat-clickable";
+    row.setAttribute("role", "button");
+    row.setAttribute("tabindex", "0");
+    row.setAttribute("aria-label", "Réviser la catégorie " + catLabels[cat] + ", maîtrise " + masteryPct + "%");
+    row.onclick = () => startCategoryReview(cat);
+    row.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); startCategoryReview(cat); } };
     row.innerHTML = `<span class="cat-stat-label">${catLabels[cat]}</span>` +
-      `<div class="cat-stat-bar"><div class="cat-stat-fill" style="width:${pct}%"></div></div>` +
-      `<span class="cat-stat-pct">${pct}%</span>` +
-      `<span style="font-size:10px;color:var(--text3);width:54px;flex-shrink:0;text-align:right">${mastered}/${total} 🎯</span>`;
+      `<div class="cat-stat-bar"><div class="cat-stat-fill" style="width:${masteryPct}%;background:${color};box-shadow:0 0 8px ${color}"></div></div>` +
+      `<span class="cat-stat-pct" style="color:${color}">${masteryPct}%</span>` +
+      `<span style="font-size:10px;color:var(--text3);width:78px;flex-shrink:0;text-align:right">${done}/${total} vues · ${mastered} 🎯</span>`;
     container.appendChild(row);
   });
 }
@@ -1997,20 +2027,21 @@ function setQuizCatActive(btn) {
   btn.classList.add("active");
 }
 
+// Pool de distracteurs partagé (Quiz + Examen blanc) : on privilégie la même
+// catégorie que la fiche pour des mauvaises réponses plus proches thématiquement
+// (donc plus discriminantes), avec repli sur toutes les fiches si la catégorie
+// n'en fournit pas assez.
+function distractorPool(f) {
+  const sameCat = FICHES.filter(x => x.id !== f.id && !x.is_cmd && x.cat === f.cat);
+  if (sameCat.length >= 3) return sameCat;
+  return FICHES.filter(x => x.id !== f.id && !x.is_cmd);
+}
+
 function buildQuestions() {
   const pool = [];
   let fichePool = FICHES.filter(f => !f.is_cmd);
   if (quizCatFilter !== "all") fichePool = fichePool.filter(f => f.cat === quizCatFilter);
   if (fichePool.length < 4) fichePool = FICHES.filter(f => !f.is_cmd);
-
-  // Pool de distracteurs : on privilégie la même catégorie que la fiche pour
-  // des mauvaises réponses plus proches thématiquement (donc plus discriminantes),
-  // avec repli sur toutes les fiches si la catégorie n'en fournit pas assez.
-  function distractorPool(f) {
-    const sameCat = FICHES.filter(x => x.id !== f.id && !x.is_cmd && x.cat === f.cat);
-    if (sameCat.length >= 3) return sameCat;
-    return FICHES.filter(x => x.id !== f.id && !x.is_cmd);
-  }
 
   fichePool.forEach(f => {
     const wrongDefs = shuffle(distractorPool(f))
@@ -2325,12 +2356,12 @@ let examStartTime = 0;
 function buildQuestionPool(fichePool) {
   const pool = [];
   fichePool.forEach(f => {
-    const wrongDefs = shuffle(FICHES.filter(x => x.id !== f.id && !x.is_cmd))
+    const wrongDefs = shuffle(distractorPool(f))
       .slice(0, 3).map(x => x.def.substring(0, 90) + "…");
     pool.push({ question:"Quelle est la bonne définition de <strong>"+f.titre+"</strong> ?", correct:f.def.substring(0,90)+"…", wrong:wrongDefs, explanation:f.retenir, cat:f.cat, ficheId:f.id });
-    const wrongPieges = shuffle(FICHES.filter(x => x.id !== f.id && !x.is_cmd)).slice(0,3).map(x => x.piege);
+    const wrongPieges = shuffle(distractorPool(f)).slice(0,3).map(x => x.piege);
     pool.push({ question:"Quel est le piège classique concernant <strong>"+f.titre+"</strong> ?", correct:f.piege, wrong:wrongPieges, explanation:f.retenir, cat:f.cat, ficheId:f.id });
-    const wrongRetenir = shuffle(FICHES.filter(x => x.id !== f.id && !x.is_cmd)).slice(0,3).map(x => x.retenir);
+    const wrongRetenir = shuffle(distractorPool(f)).slice(0,3).map(x => x.retenir);
     pool.push({ question:"Que faut-il retenir en priorité sur <strong>"+f.titre+"</strong> ?", correct:f.retenir, wrong:wrongRetenir, explanation:f.def.substring(0,120)+"…", cat:f.cat, ficheId:f.id });
   });
   return pool;

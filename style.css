@@ -792,6 +792,8 @@ html:not([data-theme="dark"]) .card:hover{
 .cat-stats{display:flex;flex-direction:column;gap:10px}
 .cat-stat-row{background:var(--glass);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--glass-brd);border-radius:var(--radius);padding:.85rem 1.1rem;transition:all var(--transition)}
 .cat-stat-row:hover{border-color:var(--accent);transform:translateX(2px)}
+.cat-stat-clickable{cursor:pointer}
+.cat-stat-clickable:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .cat-stat-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
 .cat-stat-name{font-family:var(--sans);font-size:12.5px;font-weight:600;color:var(--text)}
 .cat-stat-nums{font-family:var(--mono);font-size:10.5px;color:var(--text3)}

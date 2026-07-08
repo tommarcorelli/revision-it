@@ -40,6 +40,7 @@ Ordre de chargement des scripts : `data.js` → `terminal-data.js` → `script.j
 ## Stats, recherche & accessibilité
 
 - **Stats enrichies** (`renderStatsSummary()`) : série de révision (🔥 streak via `revision_activity`), fiches vues, maîtrisées, record quiz, répartition des niveaux 1–5, et historique des quiz (`revision_quiz_history`, `recordQuizResult()`).
+- **Catégories à réviser en priorité** (`renderStats()`) : toutes les catégories triées par % de maîtrise (moyenne des niveaux 0–5, fiches jamais vues comptées à 0), de la plus faible à la plus forte. Chaque ligne est cliquable et lance `startCategoryReview(cat)` : bascule en Flashcards, filtré sur la catégorie, fiches les moins maîtrisées en premier. Un aperçu (top 3) est aussi affiché sur l'Accueil sous "Catégories à renforcer", avec un lien "Voir toutes les catégories" vers cette vue complète.
 - **Recherche** : porte sur titre, sous-titre, définition, points, piège, à-retenir et mots-clés. Taper une recherche depuis un autre mode bascule sur les Fiches ; le compteur de la barre affiche le nombre de résultats ; <kbd>Échap</kbd> vide la recherche.
 - **Accessibilité** : focus clavier visible (`:focus-visible`), respect de `prefers-reduced-motion`, `aria-label` sur les boutons icônes, `aria-live` sur le compteur. Onboarding première visite (`maybeShowOnboarding()`, `revision_onboarded`).
 
@@ -141,4 +142,4 @@ Stratégie network-first sur `.html`, `.js`, `.css` (toujours la dernière versi
 
 **À chaque déploiement majeur** : monter le numéro de version dans `CACHE_NAME` de `sw.js` pour invalider le cache des utilisateurs existants.
 
-Version actuelle : `revision-it-v20`
+Version actuelle : `revision-it-v22`
