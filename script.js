@@ -1256,7 +1256,7 @@ function openDetail(id, indexInFiltered) {
       schemaHTML +
       extraHTML +
       '<div class="section"><div class="section-label">Points clés</div><ul class="key-list">' +
-      f.points.map(p => '<li>' + p + '</li>').join("") + '</ul></div>';
+      (f.points || []).map(p => '<li>' + p + '</li>').join("") + '</ul></div>';
   }
 
   const prevId = filteredList[idx - 1] ? filteredList[idx - 1].id : null;
@@ -2003,8 +2003,17 @@ function buildQuestions() {
   if (quizCatFilter !== "all") fichePool = fichePool.filter(f => f.cat === quizCatFilter);
   if (fichePool.length < 4) fichePool = FICHES.filter(f => !f.is_cmd);
 
+  // Pool de distracteurs : on privilégie la même catégorie que la fiche pour
+  // des mauvaises réponses plus proches thématiquement (donc plus discriminantes),
+  // avec repli sur toutes les fiches si la catégorie n'en fournit pas assez.
+  function distractorPool(f) {
+    const sameCat = FICHES.filter(x => x.id !== f.id && !x.is_cmd && x.cat === f.cat);
+    if (sameCat.length >= 3) return sameCat;
+    return FICHES.filter(x => x.id !== f.id && !x.is_cmd);
+  }
+
   fichePool.forEach(f => {
-    const wrongDefs = shuffle(FICHES.filter(x => x.id !== f.id && !x.is_cmd))
+    const wrongDefs = shuffle(distractorPool(f))
       .slice(0, 3).map(x => x.def.substring(0, 90) + "…");
     pool.push({
       question: "Quelle est la bonne définition de <strong>" + f.titre + "</strong> ?",
@@ -2013,7 +2022,7 @@ function buildQuestions() {
       explanation: f.retenir,
       cat: f.cat
     });
-    const wrongPieges = shuffle(FICHES.filter(x => x.id !== f.id && !x.is_cmd))
+    const wrongPieges = shuffle(distractorPool(f))
       .slice(0, 3).map(x => x.piege);
     pool.push({
       question: "Quel est le piège classique concernant <strong>" + f.titre + "</strong> ?",
@@ -2022,7 +2031,7 @@ function buildQuestions() {
       explanation: f.retenir,
       cat: f.cat
     });
-    const wrongRetenir = shuffle(FICHES.filter(x => x.id !== f.id && !x.is_cmd))
+    const wrongRetenir = shuffle(distractorPool(f))
       .slice(0, 3).map(x => x.retenir);
     pool.push({
       question: "Que faut-il retenir en priorité sur <strong>" + f.titre + "</strong> ?",

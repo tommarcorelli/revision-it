@@ -227,16 +227,16 @@
 
 <!-- Overlay détail fiche -->
 <div class="overlay" id="overlay" onclick="handleOverlayClick(event)">
-  <div class="panel" id="panel">
+  <div class="panel" id="panel" role="dialog" aria-modal="true" aria-label="Détail de la fiche">
     <button class="close-btn" onclick="closeDetail()">✕ Fermer</button>
     <div id="detail-content"></div>
   </div>
 </div>
 
 <!-- Modal reset -->
-<div class="reset-modal" id="reset-modal">
+<div class="reset-modal" id="reset-modal" role="dialog" aria-modal="true" aria-labelledby="reset-modal-title">
   <div class="reset-box">
-    <h3>⚙️ Paramètres</h3>
+    <h3 id="reset-modal-title">⚙️ Paramètres</h3>
     <p>Choisis ce que tu veux effacer.</p>
     <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:1.25rem;text-align:left">
       <label style="font-size:13px;display:flex;align-items:center;gap:8px;cursor:pointer">
