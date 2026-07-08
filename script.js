@@ -1220,6 +1220,70 @@ function updateProgress() {
 // ═══════════════════════════════════════════
 // DÉTAIL
 // ═══════════════════════════════════════════
+// ═══════════════════════════════════════════
+// EXPORT PDF MULTI-FICHES (via impression navigateur)
+// ═══════════════════════════════════════════
+function buildCmdsHtml(cmds) {
+  return (cmds || []).map(s =>
+    '<div class="cmd-section"><div class="cmd-section-title">' + s.section + '</div>' +
+    s.items.map(i => '<div class="cmd-block"><code>' + escHtml(i.cmd) + '</code><span class="cmd-comment">' + escHtml(i.comment) + '</span></div>').join("") +
+    '</div>'
+  ).join("");
+}
+
+function buildFichePrintHtml(f) {
+  const schemaHTML = f.schema ? '<div class="section"><div class="section-label">📊 Schéma</div><div class="schema-box">' + f.schema + '</div></div>' : "";
+  let mainContent;
+  if (f.is_cmd) {
+    mainContent = '<div class="section"><div class="section-label">Définition</div><p class="def-text">' + f.def + '</p></div>' +
+      schemaHTML +
+      '<div class="section"><div class="section-label">Commandes essentielles</div>' + buildCmdsHtml(f.cmds) + '</div>';
+  } else {
+    mainContent = '<div class="section"><div class="section-label">Définition</div><p class="def-text">' + f.def + '</p></div>' +
+      schemaHTML +
+      '<div class="section"><div class="section-label">Points clés</div><ul class="key-list">' +
+      (f.points || []).map(p => '<li>' + p + '</li>').join("") + '</ul></div>';
+  }
+  return '<article class="print-fiche">' +
+    '<span class="detail-badge badge-' + f.cat + '">' + catLabels[f.cat] + '</span>' +
+    '<h2 class="detail-title">' + escHtml(f.titre) + '</h2>' +
+    '<p class="detail-sub">' + escHtml(f.sub || "") + '</p>' +
+    mainContent +
+    (f.piege ? '<div class="section"><div class="section-label">⚠️ Piège classique</div><div class="piege-box">' + f.piege + '</div></div>' : "") +
+    (f.retenir ? '<div class="section"><div class="section-label">✅ À retenir</div><div class="retenir-box">' + f.retenir + '</div></div>' : "") +
+    '</article>';
+}
+
+// Construit la page d'impression multi-fiches et ouvre la boîte de dialogue
+// d'impression du navigateur (l'utilisateur choisit "Enregistrer en PDF").
+function exportFichesToPDF(fiches, label) {
+  if (!fiches || fiches.length === 0) return;
+  const container = document.getElementById("print-export");
+  if (!container) return;
+  container.innerHTML =
+    '<h1 class="print-export-title">Révision IT — ' + escHtml(label || "Export") + '</h1>' +
+    '<p class="print-export-meta">' + fiches.length + ' fiche' + (fiches.length > 1 ? "s" : "") +
+    ' · exporté le ' + new Date().toLocaleDateString("fr-FR") + '</p>' +
+    fiches.map(buildFichePrintHtml).join("");
+  document.body.classList.add("printing-export");
+  window.print();
+}
+
+// Exporte la liste actuellement affichée dans la vue Fiches (respecte
+// recherche, filtre de catégorie, favoris et "à revoir" en cours).
+function exportFilteredToPDF() {
+  if (!filteredList || filteredList.length === 0) return;
+  let label = currentFilter === "all" ? "Toutes les fiches" : catLabels[currentFilter];
+  if (favFilterOn) label += " · Favoris";
+  if (weakFilterOn) label += " · À revoir";
+  exportFichesToPDF(filteredList, label);
+}
+
+// Nettoyage après impression/annulation (dialogue Enregistrer en PDF fermé)
+window.addEventListener("afterprint", () => {
+  document.body.classList.remove("printing-export");
+});
+
 function openDetail(id, indexInFiltered) {
   const f = FICHES.find(x => x.id === id);
   if (!f) return;

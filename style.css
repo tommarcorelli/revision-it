@@ -891,16 +891,25 @@ html:not([data-theme="dark"]) .card:hover{
 .kbd-hint{font-family:var(--mono);font-size:10px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:2px 6px;color:var(--text2);vertical-align:middle}
 
 /* ── IMPRESSION / PDF ─────────────────────────────── */
+#print-export{display:none}
+.print-export-title{font-family:var(--sans);font-size:22px;margin-bottom:.25rem}
+.print-export-meta{font-size:12px;color:#666;margin-bottom:1.5rem}
+.print-fiche{margin-bottom:1.75rem;padding-bottom:1.5rem;border-bottom:1px solid #ddd}
+.print-fiche:last-child{border-bottom:none}
 @media print{
   *{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important}
   body{background:#fff !important;color:#000}
   body::before,body::after,.bg-orbs,.nav,.sidebar,.sidebar-backdrop,.onboarding,.accent-popover,.daily-banner{display:none !important}
   .layout{display:block;padding-top:0}
   .main{padding:0}
-  /* N'imprimer que la fiche ouverte */
-  .overlay.open{position:static;display:block;background:none;padding:0;inset:auto;overflow:visible}
-  .overlay.open .panel{box-shadow:none;border:none;max-width:100%;max-height:none;overflow:visible;margin:0;padding:0;border-radius:0}
-  .overlay:not(.open){display:none !important}
+  /* Export PDF multi-fiches : n'imprimer que le conteneur dédié */
+  body.printing-export .layout,body.printing-export .overlay{display:none !important}
+  body.printing-export #print-export{display:block !important}
+  body.printing-export .print-fiche{page-break-inside:avoid;break-inside:avoid}
+  /* Impression d'une fiche unique (bouton 🖨️ Imprimer du panneau détail) */
+  body:not(.printing-export) .overlay.open{position:static;display:block;background:none;padding:0;inset:auto;overflow:visible}
+  body:not(.printing-export) .overlay.open .panel{box-shadow:none;border:none;max-width:100%;max-height:none;overflow:visible;margin:0;padding:0;border-radius:0}
+  body:not(.printing-export) .overlay:not(.open){display:none !important}
   .close-btn,.panel-nav,.btn-done,.panel-level,.detail-top-actions,.card-fav,.related-grid,.detail-fav,.detail-print,.section-label::before{display:none !important}
   .section,.schema-box,.cmd-block{page-break-inside:avoid}
   .schema-box svg{max-width:100%;height:auto}

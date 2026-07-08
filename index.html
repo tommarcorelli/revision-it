@@ -110,6 +110,7 @@
       <div class="fiche-toolbar">
         <button class="weak-btn" id="weak-filter-btn" onclick="toggleWeakFilter(this)">⚠️ À revoir</button>
         <button class="fav-btn" id="fav-filter-btn" onclick="toggleFavFilter(this)">★ Favoris</button>
+        <button class="fav-btn" id="pdf-export-btn" onclick="exportFilteredToPDF()" title="Exporter les fiches affichées en PDF (via Imprimer → Enregistrer en PDF)" aria-label="Exporter les fiches affichées en PDF">🖨️ Export PDF</button>
         <select id="sort-select" onchange="renderCards()" class="sort-select">
           <option value="default">Défaut</option>
           <option value="level-asc">Niveau ↑</option>
@@ -304,6 +305,9 @@
   <button class="tab-btn" data-mode="terminal" onclick="setMode('terminal',this)"><span class="tab-ico">💻</span><span class="tab-lbl">Terminal</span></button>
   <button class="tab-btn tab-more" onclick="toggleSidebar()" aria-label="Plus de modes"><span class="tab-ico">☰</span><span class="tab-lbl">Plus</span></button>
 </nav>
+
+<!-- Conteneur d'impression pour l'export PDF multi-fiches (rempli par exportFichesToPDF) -->
+<div id="print-export"></div>
 
 <!-- IDs legacy pour compatibilité script.js -->
 <span id="subtitle-text" style="display:none"></span>

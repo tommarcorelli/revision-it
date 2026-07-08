@@ -35,6 +35,7 @@ Ordre de chargement des scripts : `data.js` → `terminal-data.js` → `script.j
 ## Favoris & Révision du jour
 
 - **Favoris** : étoile ★ sur chaque carte et dans le panneau détail (`toggleFavorite(id)`), stockés dans `revision_favorites`. Bouton **★ Favoris** dans la barre d'outils des fiches pour ne montrer que les favoris.
+- **Export PDF multi-fiches** (`exportFilteredToPDF()`, `exportFichesToPDF()`) : bouton 🖨️ Export PDF dans la vue Fiches, exporte exactement ce qui est affiché (recherche, catégorie, favoris, "à revoir" compris) via la boîte de dialogue d'impression du navigateur (→ "Enregistrer en PDF"). Rendu géré par `#print-export` (index.html) et le bloc `@media print` correspondant dans style.css.
 - **Révision du jour** : action principale de l'accueil (`startDailyReview()`). Construit un lot priorisé de 20 fiches via `buildDailyList()` — score : dues Anki (+100) > faibles niveau ≤2 (+50) > favoris (+20) > jamais vues (+10). Affiché dans la vue Fiches avec une bannière ; `exitDailyReview()` ou le choix d'une catégorie en sort.
 
 ## Stats, recherche & accessibilité
@@ -142,4 +143,4 @@ Stratégie network-first sur `.html`, `.js`, `.css` (toujours la dernière versi
 
 **À chaque déploiement majeur** : monter le numéro de version dans `CACHE_NAME` de `sw.js` pour invalider le cache des utilisateurs existants.
 
-Version actuelle : `revision-it-v22`
+Version actuelle : `revision-it-v23`
