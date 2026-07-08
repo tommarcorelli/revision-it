@@ -1284,6 +1284,57 @@ window.addEventListener("afterprint", () => {
   document.body.classList.remove("printing-export");
 });
 
+// ═══════════════════════════════════════════
+// TOAST (petite notification temporaire)
+// ═══════════════════════════════════════════
+let toastTimer = null;
+function showToast(msg) {
+  let el = document.getElementById("app-toast");
+  if (!el) {
+    el = document.createElement("div");
+    el.id = "app-toast";
+    el.className = "app-toast";
+    el.setAttribute("role", "status");
+    el.setAttribute("aria-live", "polite");
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+  el.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove("show"), 3000);
+}
+
+// ═══════════════════════════════════════════
+// SIGNALER UNE ERREUR SUR UNE FICHE
+// ═══════════════════════════════════════════
+// Pas de backend : on copie un rapport pré-rempli dans le presse-papiers
+// (repli universel) et on ouvre le client mail par défaut avec sujet/corps
+// déjà remplis, adresse à compléter par la personne qui révise.
+function reportFicheIssue(id) {
+  const f = FICHES.find(x => x.id === id);
+  if (!f) return;
+  const subject = "Signalement — Fiche #" + f.id + " : " + f.titre;
+  const body =
+    "Fiche : #" + f.id + " — " + f.titre + " (" + catLabels[f.cat] + ")\n" +
+    "Lien direct : " + location.href.split("#")[0] + "#fiche-" + f.id + "\n\n" +
+    "Décris le problème (coquille, erreur technique, info obsolète…) :\n";
+  const fullText = subject + "\n\n" + body;
+
+  const openMail = () => {
+    window.location.href = "mailto:?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body);
+  };
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(fullText)
+      .then(() => showToast("📋 Détails copiés — e-mail pré-rempli en cours d'ouverture…"))
+      .catch(() => showToast("✉️ E-mail pré-rempli en cours d'ouverture…"))
+      .finally(openMail);
+  } else {
+    showToast("✉️ E-mail pré-rempli en cours d'ouverture…");
+    openMail();
+  }
+}
+
 function openDetail(id, indexInFiltered) {
   const f = FICHES.find(x => x.id === id);
   if (!f) return;
@@ -1364,6 +1415,7 @@ function openDetail(id, indexInFiltered) {
     '<div class="detail-top">' +
     '<span class="detail-badge badge-' + f.cat + '">' + catLabels[f.cat] + '</span>' +
     '<div class="detail-top-actions">' +
+    '<button class="detail-print" onclick="reportFicheIssue(' + id + ')" title="Signaler une erreur sur cette fiche" aria-label="Signaler une erreur sur cette fiche">🚩 Signaler</button>' +
     '<button class="detail-print" onclick="window.print()" title="Imprimer / PDF" aria-label="Imprimer cette fiche">🖨️ Imprimer</button>' +
     '<button class="detail-fav' + (favOn ? ' on' : '') + '" id="detail-fav-' + id + '" onclick="toggleFavorite(' + id + ',event)">' + (favOn ? '★ Favori' : '☆ Favori') + '</button>' +
     '</div>' +

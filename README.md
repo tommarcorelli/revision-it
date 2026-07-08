@@ -36,6 +36,7 @@ Ordre de chargement des scripts : `data.js` → `terminal-data.js` → `script.j
 
 - **Favoris** : étoile ★ sur chaque carte et dans le panneau détail (`toggleFavorite(id)`), stockés dans `revision_favorites`. Bouton **★ Favoris** dans la barre d'outils des fiches pour ne montrer que les favoris.
 - **Export PDF multi-fiches** (`exportFilteredToPDF()`, `exportFichesToPDF()`) : bouton 🖨️ Export PDF dans la vue Fiches, exporte exactement ce qui est affiché (recherche, catégorie, favoris, "à revoir" compris) via la boîte de dialogue d'impression du navigateur (→ "Enregistrer en PDF"). Rendu géré par `#print-export` (index.html) et le bloc `@media print` correspondant dans style.css.
+- **Signaler une erreur** (`reportFicheIssue(id)`) : bouton 🚩 Signaler dans le panneau détail de chaque fiche. Copie un rapport pré-rempli (id, titre, catégorie, lien direct `#fiche-ID`) dans le presse-papiers puis ouvre le client mail par défaut avec sujet/corps déjà remplis (adresse à compléter). Notification via `showToast()`, un petit système de toast générique réutilisable ailleurs dans l'app.
 - **Révision du jour** : action principale de l'accueil (`startDailyReview()`). Construit un lot priorisé de 20 fiches via `buildDailyList()` — score : dues Anki (+100) > faibles niveau ≤2 (+50) > favoris (+20) > jamais vues (+10). Affiché dans la vue Fiches avec une bannière ; `exitDailyReview()` ou le choix d'une catégorie en sort.
 
 ## Stats, recherche & accessibilité
@@ -143,4 +144,4 @@ Stratégie network-first sur `.html`, `.js`, `.css` (toujours la dernière versi
 
 **À chaque déploiement majeur** : monter le numéro de version dans `CACHE_NAME` de `sw.js` pour invalider le cache des utilisateurs existants.
 
-Version actuelle : `revision-it-v23`
+Version actuelle : `revision-it-v24`
