@@ -2,7 +2,7 @@
 // Le cache est invalidé automatiquement quand script.js ou style.css changent
 // (network-first sur les assets principaux, cache-first sur les icônes)
 
-const CACHE_NAME = "revision-it-v31";
+const CACHE_NAME = "revision-it-v32";
 const STATIC_ASSETS = [
   "./index.html",
   "./css/style.css",

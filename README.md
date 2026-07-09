@@ -24,11 +24,9 @@ Ordre de chargement des scripts : `js/data.js` → `js/terminal-data.js` → `js
 
 ## Contenu
 
-220 fiches réparties sur 27 catégories. Catégorie **Hacking / Pentest** portée à 18 fiches (id 5101–5108, 5111–5112) avec un volet "pentest avancé" : escalade de privilèges Linux/Windows, fondamentaux du buffer overflow, Metasploit, Burp Suite, méthodologie de reconnaissance, pivoting/tunneling, rapport de pentest/CVSS, et reverse engineering (analyse statique et dynamique de malware). Catégorie **Sécurité** enrichie de 3 fiches DFIR (id 5109, 5110, 5113) : analyse mémoire (Volatility), imagerie disque/chaîne de custody, règles YARA. Catégories **Cryptographie** et **Sécurité Web** enrichies (id 5114–5116) : cryptographie post-quantique (ML-KEM, ML-DSA, hybride), flows OAuth2 en détail (Authorization Code + PKCE, Client Credentials, OIDC), et sécurité GraphQL (introspection, depth limiting, N+1).
+220 fiches réparties sur 27 catégories. Catégorie **Hacking / Pentest** portée à 18 fiches (id 5101–5108, 5111–5112) avec un volet "pentest avancé" : escalade de privilèges Linux/Windows, fondamentaux du buffer overflow, Metasploit, Burp Suite, méthodologie de reconnaissance, pivoting/tunneling, rapport de pentest/CVSS, et reverse engineering (analyse statique et dynamique de malware). Catégorie **Sécurité** enrichie de 3 fiches DFIR (id 5109, 5110, 5113) : analyse mémoire (Volatility), imagerie disque/chaîne de custody, règles YARA. Catégories **Cryptographie** et **Sécurité Web** enrichies (id 5114–5116) : cryptographie post-quantique (ML-KEM, ML-DSA, hybride), flows OAuth2 en détail (Authorization Code + PKCE, Client Credentials, OIDC), et sécurité GraphQL (introspection, depth limiting, N+1). Catégorie **Méthodologie** enrichie (id 5117–5118) : panorama des certifications cyber (Security+, CEH, OSCP, ISO 27001, CISSP, CCNA) et guide de choix selon l'orientation professionnelle visée.
 
-## Contenu
-
-212 fiches réparties sur 27 catégories. Catégorie **Hacking / Pentest** portée de 8 à 16 fiches (id 5101–5108) avec un volet "pentest avancé" : escalade de privilèges Linux (SUID, sudo -l, cron, capabilities) et Windows (services mal permissionnés, AlwaysInstallElevated, Potato), fondamentaux du buffer overflow, Metasploit Framework, workflow Burp Suite, méthodologie de reconnaissance/énumération, pivoting/tunneling (SSH, proxychains, chisel), et structure d'un rapport de pentest avec scoring CVSS.
+**Déduplication** : une passe de détection de similarité (indice de Jaccard sur les mots-clés) a identifié 2 doublons de contenu préexistants — fusionnés sans perte : `3901` (Load Balancing HAProxy, ex-3901+4948) et `4927` (Syslog, ex-4927+4936). Les autres paires détectées (FortiGate, Sauvegarde/PRA-PCA, EBIOS RM, SNMP, Terraform, QoS, RADIUS/802.1X) sont volontaires — pattern "fiche concept + fiche pratique/plateforme" déjà utilisé ailleurs (ex: PKI Entreprise scindée Architecture/openssl) — et ont été laissées telles quelles.
 
 ## Modes disponibles
 
@@ -158,4 +156,4 @@ Stratégie network-first sur `.html`, `.js`, `.css` (toujours la dernière versi
 
 **À chaque déploiement majeur** : monter le numéro de version dans `CACHE_NAME` de `sw.js` pour invalider le cache des utilisateurs existants.
 
-Version actuelle : `revision-it-v31`
+Version actuelle : `revision-it-v32`
