@@ -28,5 +28,25 @@
       "type": "image/png",
       "purpose": "maskable"
     }
+  ],
+  "shortcuts": [
+    {
+      "name": "Quiz",
+      "short_name": "Quiz",
+      "description": "Lancer un quiz de révision",
+      "url": "./index.html#quiz"
+    },
+    {
+      "name": "Flashcards",
+      "short_name": "Flashcards",
+      "description": "Réviser en mode flashcards",
+      "url": "./index.html#flashcard"
+    },
+    {
+      "name": "Répétition espacée",
+      "short_name": "Anki SRS",
+      "description": "Réviser les fiches dues (SRS)",
+      "url": "./index.html#anki"
+    }
   ]
 }

@@ -6,7 +6,7 @@ PWA de révision pour l'informatique, la cybersécurité et le SISR : fiches, fl
 
 ```
 index.html          Structure de la page, tous les écrans
-manifest.json        Métadonnées PWA (nom, icônes, couleurs)
+manifest.json        Métadonnées PWA (nom, icônes, couleurs, raccourcis d'app)
 sw.js                 Service worker (cache offline, stratégie network-first) — reste à la racine
                        pour garder une portée (scope) sur toute l'application
 css/
@@ -150,10 +150,14 @@ Dans `js/terminal-data.js`, tableau `TERM_SCENARIOS` :
 - 🚧 Règle pare-feu bloquante (pfSense)
 - 💾 Sauvegarde & restauration Proxmox
 
+## Raccourcis d'application (PWA)
+
+`manifest.json` expose 3 raccourcis (accessibles par appui long sur l'icône mobile ou clic droit sur desktop) : Quiz, Flashcards, Répétition espacée. Chacun pointe vers `./index.html#<mode>`, lu par `applyRoute()` dès le chargement initial (y compris à froid, app fermée).
+
 ## Service Worker / cache
 
 Stratégie network-first sur `.html`, `.js`, `.css` (toujours la dernière version), cache-first sur les icônes et `manifest.json`.
 
 **À chaque déploiement majeur** : monter le numéro de version dans `CACHE_NAME` de `sw.js` pour invalider le cache des utilisateurs existants.
 
-Version actuelle : `revision-it-v32`
+Version actuelle : `revision-it-v33`
