@@ -18,6 +18,10 @@ icons/             Icônes PWA (192, 512, 512-maskable, apple-touch)
 
 Ordre de chargement des scripts : `data.js` → `terminal-data.js` → `script.js`.
 
+## Contenu
+
+212 fiches réparties sur 27 catégories. Catégorie **Hacking / Pentest** portée de 8 à 16 fiches (id 5101–5108) avec un volet "pentest avancé" : escalade de privilèges Linux (SUID, sudo -l, cron, capabilities) et Windows (services mal permissionnés, AlwaysInstallElevated, Potato), fondamentaux du buffer overflow, Metasploit Framework, workflow Burp Suite, méthodologie de reconnaissance/énumération, pivoting/tunneling (SSH, proxychains, chisel), et structure d'un rapport de pentest avec scoring CVSS.
+
 ## Modes disponibles
 
 | Mode | Description |
@@ -121,6 +125,8 @@ Dans `terminal-data.js`, tableau `TERM_SCENARIOS` :
 }
 ```
 
+**Validation des réponses** (`execScenarioCmd()` dans script.js) : correspondance insensible à la casse, en préfixe (`"ss -tp"` valide aussi `"ss -tp -n"`). Pour les attendus courts et purement alphanumériques (≤4 caractères, ex. `"ss"`, `"dig"`, `"cat"`), une frontière de mot est exigée après le préfixe pour éviter qu'une commande différente mais proche (ex. taper `"ssh"` au lieu de `"ss"`) ne soit validée à tort. Les fragments contenant un caractère spécial (ex. `"p="`, `"_dmarc"`) gardent l'ancien comportement, plus permissif.
+
 ## Scénarios disponibles (14)
 
 - 🔍 Forensique Linux
@@ -144,4 +150,4 @@ Stratégie network-first sur `.html`, `.js`, `.css` (toujours la dernière versi
 
 **À chaque déploiement majeur** : monter le numéro de version dans `CACHE_NAME` de `sw.js` pour invalider le cache des utilisateurs existants.
 
-Version actuelle : `revision-it-v24`
+Version actuelle : `revision-it-v27`
