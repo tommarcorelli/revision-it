@@ -13,6 +13,16 @@ let favFilterOn = false;         // filtre "★ Favoris" actif
 let dailyReviewOn = false;       // mode "Révision du jour" actif
 let dailyList = [];              // fiches sélectionnées pour la révision du jour
 
+// Normalise une chaîne pour une recherche insensible à la casse ET aux accents
+// (ex: "securite" retrouve "Sécurité"). Utilisé par toutes les recherches de l'app.
+function normalizeSearch(s) {
+  return (s || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
 // ─── Persistence ───
 function saveSeen() {
   try { localStorage.setItem("revision_seen", JSON.stringify([...seen])); } catch(e){}
@@ -175,9 +185,11 @@ function srsUpdate(id, quality) {
   saveSrs();
 
   // Synchroniser le niveau de maîtrise (level) avec le SRS
-  if (quality === 0) { levels[id] = Math.max(1, (levels[id] || 1)); }
-  else if (quality === 1) { levels[id] = Math.max(2, (levels[id] || 2)); }
-  else if (quality === 2) { levels[id] = Math.max(3, (levels[id] || 3)); }
+  // Le niveau reflète la dernière réponse : un échec doit pouvoir faire redescendre
+  // une fiche déjà "maîtrisée" (avant, Math.max empêchait toute baisse — bug).
+  if (quality === 0) { levels[id] = 1; }
+  else if (quality === 1) { levels[id] = 2; }
+  else if (quality === 2) { levels[id] = 4; }
   else { levels[id] = 5; }
   saveLevels();
   seen.add(id); saveSeen();
@@ -198,6 +210,19 @@ function getSrsDue() {
 // ─── Reset modal ───
 function openReset() {
   document.getElementById("reset-modal").classList.add("open");
+}
+// Ouvre la modale Paramètres et amène directement la liste des raccourcis
+// clavier à l'écran (déclenché par le bouton ⌨️ ou la touche '?').
+function openShortcutsHelp() {
+  openReset();
+  requestAnimationFrame(() => {
+    const el = document.querySelector(".shortcuts-section");
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+      el.classList.add("shortcuts-highlight");
+      setTimeout(() => el.classList.remove("shortcuts-highlight"), 1500);
+    }
+  });
 }
 function closeReset() {
   document.getElementById("reset-modal").classList.remove("open");
@@ -227,12 +252,15 @@ function confirmReset() {
 function exportProgress() {
   const data = {
     type: "revision-it-progress",
-    version: 1,
+    version: 2,
     exportedAt: new Date().toISOString(),
     seen: [...seen],
     levels: levels,
     srsData: srsData,
     quizBest: loadQuizBest(),
+    favorites: [...favorites],
+    quizHistory: getQuizHistory(),
+    activity: [...getActivityDays()],
     dark: (() => { try { return localStorage.getItem("revision_dark"); } catch(e){ return null; } })()
   };
   const blob = new Blob([JSON.stringify(data, null, 2)], {type: "application/json"});
@@ -277,6 +305,16 @@ function importProgress(event) {
       if (data.quizBest) {
         try { localStorage.setItem("revision_quiz_best", data.quizBest); } catch(err){}
         document.getElementById("stat-quiz").textContent = data.quizBest + "%";
+      }
+      if (Array.isArray(data.favorites)) {
+        favorites = new Set(data.favorites);
+        saveFavorites();
+      }
+      if (Array.isArray(data.quizHistory)) {
+        try { localStorage.setItem("revision_quiz_history", JSON.stringify(data.quizHistory)); } catch(err){}
+      }
+      if (Array.isArray(data.activity)) {
+        try { localStorage.setItem("revision_activity", JSON.stringify(data.activity)); } catch(err){}
       }
       if (data.dark === "1" || data.dark === "0") {
         try { localStorage.setItem("revision_dark", data.dark); } catch(err){}
@@ -448,6 +486,11 @@ document.addEventListener("keydown", e => {
       const opts = document.querySelectorAll("#exam-options .quiz-opt:not(:disabled)");
       if (opts[idx]) { e.preventDefault(); opts[idx].click(); }
     }
+  }
+  // '?' → ouvre l'aide sur les raccourcis clavier (hors inputs)
+  if (e.key === "?" && !["INPUT","TEXTAREA"].includes(document.activeElement.tagName)) {
+    e.preventDefault();
+    openShortcutsHelp();
   }
   // '/' → focus la recherche (hors inputs)
   if (e.key === "/" && !["INPUT","TEXTAREA"].includes(document.activeElement.tagName)) {
@@ -627,7 +670,7 @@ function onTermKey(e) {
     const cmd = inp.value.trim();
     inp.value = "";
     if (cmd) { termHistory.unshift(cmd); termHistIdx = -1; }
-    if (cmd === "clear") { clearTerm(); return; }
+    if (cmd.toLowerCase() === "clear") { clearTerm(); return; }
     if (scenarioMode) {
       execScenarioCmd(cmd);
     } else {
@@ -647,8 +690,9 @@ function onTermKey(e) {
 function autoComplete(inp) {
   const val = inp.value;
   if (!val) return;
+  const lc = val.toLowerCase();
   const cmds = scenarioMode ? [] : Object.keys(TERM_SHELLS[currentShell].commands);
-  const matches = cmds.filter(k => k.startsWith(val));
+  const matches = cmds.filter(k => k.toLowerCase().startsWith(lc));
   if (matches.length === 1) {
     inp.value = matches[0];
   } else if (matches.length > 1) {
@@ -681,7 +725,24 @@ function execScenarioCmd(cmd) {
   addLine("cmd", sh.prompt + " " + cmd);
 
   // Vérifier si la commande correspond à une attendue (exact ou préfixe)
-  const matched = step.expected.some(e => cmd.startsWith(e) || cmd === e);
+  // Comparaison insensible à la casse : comme dans un vrai terminal (PowerShell,
+  // Cisco IOS, cmd.exe...), la casse ne doit pas faire échouer une commande
+  // par ailleurs correcte (ex: "get-process" doit valider "Get-Process").
+  const matched = step.expected.some(e => {
+    const el = e.toLowerCase();
+    if (lc === el) return true;
+    if (!lc.startsWith(el)) return false;
+    // Frontière de mot pour les attendus courts purement alphanumériques
+    // (ex: "ss", "cat", "dig", "wr") : sans ça, taper "ssh" par erreur validerait
+    // à tort un "ss" attendu puisque "ssh" commence bien par "ss". Les fragments
+    // avec caractères spéciaux (ex: "p=", "_dmarc") gardent l'ancien comportement,
+    // plus permissif par construction.
+    if (/^[a-z0-9]+$/.test(el) && el.length <= 4) {
+      const next = lc.charAt(el.length);
+      return next === "" || !/[a-z0-9]/.test(next);
+    }
+    return true;
+  });
 
   if (matched) {
     step.output.forEach(l => addLine(l.t, l.s));
@@ -703,15 +764,18 @@ function execTermCmd(cmd) {
   addLine("cmd", sh.prompt + " " + cmd);
   if (!cmd) return;
   const cmds = sh.commands;
-  // Exact match
-  if (cmds[cmd]) { cmds[cmd]().forEach(l => addLine(l.t, l.s)); return; }
+  const lc = cmd.toLowerCase();
+  // Exact match — insensible à la casse (un vrai terminal ne distingue pas
+  // "get-process" de "Get-Process", "SHOW VERSION" de "show version", etc.)
+  const exactKey = Object.keys(cmds).find(k => k.toLowerCase() === lc);
+  if (exactKey) { cmds[exactKey]().forEach(l => addLine(l.t, l.s)); return; }
   // Partial match — on choisit la clé qui partage le plus long préfixe de MOTS
   // avec la commande tapée (au moins le 1er mot). Évite que « show ip int brief »
   // tombe sur « show version » juste parce que le 1er mot « show » correspond.
-  const cmdWords = cmd.split(/\s+/);
+  const cmdWords = lc.split(/\s+/);
   let best = null, bestScore = 0;
   Object.keys(cmds).forEach(k => {
-    const kw = k.split(/\s+/);
+    const kw = k.toLowerCase().split(/\s+/);
     let n = 0;
     while (n < kw.length && n < cmdWords.length && kw[n] === cmdWords[n]) n++;
     if (n > bestScore) { bestScore = n; best = k; }
@@ -1046,7 +1110,7 @@ function exitDailyReview(silent) {
 }
 
 function renderCards() {
-  const search = (document.getElementById("search-box").value || "").toLowerCase().trim();
+  const search = normalizeSearch(document.getElementById("search-box").value);
   const sortVal = document.getElementById("sort-select").value;
   const grid = document.getElementById("cards-grid");
   const noRes = document.getElementById("no-results");
@@ -1061,13 +1125,13 @@ function renderCards() {
   }
   if (search) {
     filtered = filtered.filter(f =>
-      f.titre.toLowerCase().includes(search) ||
-      (f.sub && f.sub.toLowerCase().includes(search)) ||
-      (f.def && f.def.toLowerCase().includes(search)) ||
-      (f.piege && f.piege.toLowerCase().includes(search)) ||
-      (f.retenir && f.retenir.toLowerCase().includes(search)) ||
-      (f.points && f.points.some(p => p.toLowerCase().includes(search))) ||
-      (f.keywords && f.keywords.some(k => k.toLowerCase().includes(search)))
+      normalizeSearch(f.titre).includes(search) ||
+      (f.sub && normalizeSearch(f.sub).includes(search)) ||
+      (f.def && normalizeSearch(f.def).includes(search)) ||
+      (f.piege && normalizeSearch(f.piege).includes(search)) ||
+      (f.retenir && normalizeSearch(f.retenir).includes(search)) ||
+      (f.points && f.points.some(p => normalizeSearch(p).includes(search))) ||
+      (f.keywords && f.keywords.some(k => normalizeSearch(k).includes(search)))
     );
   }
   if (weakFilterOn) {
@@ -1195,6 +1259,121 @@ function updateProgress() {
 // ═══════════════════════════════════════════
 // DÉTAIL
 // ═══════════════════════════════════════════
+// ═══════════════════════════════════════════
+// EXPORT PDF MULTI-FICHES (via impression navigateur)
+// ═══════════════════════════════════════════
+function buildCmdsHtml(cmds) {
+  return (cmds || []).map(s =>
+    '<div class="cmd-section"><div class="cmd-section-title">' + s.section + '</div>' +
+    s.items.map(i => '<div class="cmd-block"><code>' + escHtml(i.cmd) + '</code><span class="cmd-comment">' + escHtml(i.comment) + '</span></div>').join("") +
+    '</div>'
+  ).join("");
+}
+
+function buildFichePrintHtml(f) {
+  const schemaHTML = f.schema ? '<div class="section"><div class="section-label">📊 Schéma</div><div class="schema-box">' + f.schema + '</div></div>' : "";
+  let mainContent;
+  if (f.is_cmd) {
+    mainContent = '<div class="section"><div class="section-label">Définition</div><p class="def-text">' + f.def + '</p></div>' +
+      schemaHTML +
+      '<div class="section"><div class="section-label">Commandes essentielles</div>' + buildCmdsHtml(f.cmds) + '</div>';
+  } else {
+    mainContent = '<div class="section"><div class="section-label">Définition</div><p class="def-text">' + f.def + '</p></div>' +
+      schemaHTML +
+      '<div class="section"><div class="section-label">Points clés</div><ul class="key-list">' +
+      (f.points || []).map(p => '<li>' + p + '</li>').join("") + '</ul></div>';
+  }
+  return '<article class="print-fiche">' +
+    '<span class="detail-badge badge-' + f.cat + '">' + catLabels[f.cat] + '</span>' +
+    '<h2 class="detail-title">' + escHtml(f.titre) + '</h2>' +
+    '<p class="detail-sub">' + escHtml(f.sub || "") + '</p>' +
+    mainContent +
+    (f.piege ? '<div class="section"><div class="section-label">⚠️ Piège classique</div><div class="piege-box">' + f.piege + '</div></div>' : "") +
+    (f.retenir ? '<div class="section"><div class="section-label">✅ À retenir</div><div class="retenir-box">' + f.retenir + '</div></div>' : "") +
+    '</article>';
+}
+
+// Construit la page d'impression multi-fiches et ouvre la boîte de dialogue
+// d'impression du navigateur (l'utilisateur choisit "Enregistrer en PDF").
+function exportFichesToPDF(fiches, label) {
+  if (!fiches || fiches.length === 0) return;
+  const container = document.getElementById("print-export");
+  if (!container) return;
+  container.innerHTML =
+    '<h1 class="print-export-title">Révision IT — ' + escHtml(label || "Export") + '</h1>' +
+    '<p class="print-export-meta">' + fiches.length + ' fiche' + (fiches.length > 1 ? "s" : "") +
+    ' · exporté le ' + new Date().toLocaleDateString("fr-FR") + '</p>' +
+    fiches.map(buildFichePrintHtml).join("");
+  document.body.classList.add("printing-export");
+  window.print();
+}
+
+// Exporte la liste actuellement affichée dans la vue Fiches (respecte
+// recherche, filtre de catégorie, favoris et "à revoir" en cours).
+function exportFilteredToPDF() {
+  if (!filteredList || filteredList.length === 0) return;
+  let label = currentFilter === "all" ? "Toutes les fiches" : catLabels[currentFilter];
+  if (favFilterOn) label += " · Favoris";
+  if (weakFilterOn) label += " · À revoir";
+  exportFichesToPDF(filteredList, label);
+}
+
+// Nettoyage après impression/annulation (dialogue Enregistrer en PDF fermé)
+window.addEventListener("afterprint", () => {
+  document.body.classList.remove("printing-export");
+});
+
+// ═══════════════════════════════════════════
+// TOAST (petite notification temporaire)
+// ═══════════════════════════════════════════
+let toastTimer = null;
+function showToast(msg) {
+  let el = document.getElementById("app-toast");
+  if (!el) {
+    el = document.createElement("div");
+    el.id = "app-toast";
+    el.className = "app-toast";
+    el.setAttribute("role", "status");
+    el.setAttribute("aria-live", "polite");
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+  el.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove("show"), 3000);
+}
+
+// ═══════════════════════════════════════════
+// SIGNALER UNE ERREUR SUR UNE FICHE
+// ═══════════════════════════════════════════
+// Pas de backend : on copie un rapport pré-rempli dans le presse-papiers
+// (repli universel) et on ouvre le client mail par défaut avec sujet/corps
+// déjà remplis, adresse à compléter par la personne qui révise.
+function reportFicheIssue(id) {
+  const f = FICHES.find(x => x.id === id);
+  if (!f) return;
+  const subject = "Signalement — Fiche #" + f.id + " : " + f.titre;
+  const body =
+    "Fiche : #" + f.id + " — " + f.titre + " (" + catLabels[f.cat] + ")\n" +
+    "Lien direct : " + location.href.split("#")[0] + "#fiche-" + f.id + "\n\n" +
+    "Décris le problème (coquille, erreur technique, info obsolète…) :\n";
+  const fullText = subject + "\n\n" + body;
+
+  const openMail = () => {
+    window.location.href = "mailto:?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body);
+  };
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(fullText)
+      .then(() => showToast("📋 Détails copiés — e-mail pré-rempli en cours d'ouverture…"))
+      .catch(() => showToast("✉️ E-mail pré-rempli en cours d'ouverture…"))
+      .finally(openMail);
+  } else {
+    showToast("✉️ E-mail pré-rempli en cours d'ouverture…");
+    openMail();
+  }
+}
+
 function openDetail(id, indexInFiltered) {
   const f = FICHES.find(x => x.id === id);
   if (!f) return;
@@ -1231,7 +1410,7 @@ function openDetail(id, indexInFiltered) {
       schemaHTML +
       extraHTML +
       '<div class="section"><div class="section-label">Points clés</div><ul class="key-list">' +
-      f.points.map(p => '<li>' + p + '</li>').join("") + '</ul></div>';
+      (f.points || []).map(p => '<li>' + p + '</li>').join("") + '</ul></div>';
   }
 
   const prevId = filteredList[idx - 1] ? filteredList[idx - 1].id : null;
@@ -1275,6 +1454,7 @@ function openDetail(id, indexInFiltered) {
     '<div class="detail-top">' +
     '<span class="detail-badge badge-' + f.cat + '">' + catLabels[f.cat] + '</span>' +
     '<div class="detail-top-actions">' +
+    '<button class="detail-print" onclick="reportFicheIssue(' + id + ')" title="Signaler une erreur sur cette fiche" aria-label="Signaler une erreur sur cette fiche">🚩 Signaler</button>' +
     '<button class="detail-print" onclick="window.print()" title="Imprimer / PDF" aria-label="Imprimer cette fiche">🖨️ Imprimer</button>' +
     '<button class="detail-fav' + (favOn ? ' on' : '') + '" id="detail-fav-' + id + '" onclick="toggleFavorite(' + id + ',event)">' + (favOn ? '★ Favori' : '☆ Favori') + '</button>' +
     '</div>' +
@@ -1551,18 +1731,21 @@ function renderHome() {
   }).filter(Boolean).sort((a, b) => a.avg - b.avg).slice(0, 3);
 
   const weakCatsHtml = catScores.length === 0 ? '' : `
-    <div class="home-section-label">// CATÉGORIES À RENFORCER</div>
+    <div class="home-section-label" style="display:flex;justify-content:space-between;align-items:center">
+      <span>// CATÉGORIES À RENFORCER</span>
+      <span style="cursor:pointer;color:var(--accent);font-size:12px;font-weight:600" onclick="setMode('stats',document.querySelector('[data-mode=stats]'))">Voir toutes les catégories →</span>
+    </div>
     <div class="home-weak-cats">
       ${catScores.map(({ cat, avg, seenN, total }) => {
         const pct = Math.round((seenN / total) * 100);
         const color = avg < 1.5 ? '#ef4444' : avg < 2.5 ? '#f59e0b' : 'var(--accent)';
-        return `<div class="home-weak-cat" onclick="openCategory('${cat}')">
+        return `<div class="home-weak-cat" onclick="startCategoryReview('${cat}')">
           <div class="home-weak-cat-head">
             <span class="detail-badge badge-${cat}">${catLabels[cat]}</span>
             <span class="home-weak-score" style="color:${color}">${avg.toFixed(1)} ★</span>
           </div>
           <div class="home-weak-bar"><div class="home-weak-fill" style="width:${pct}%;background:${color}"></div></div>
-          <div class="home-weak-sub">${seenN}/${total} vues</div>
+          <div class="home-weak-sub">${seenN}/${total} vues · réviser →</div>
         </div>`;
       }).join('')}
     </div>`;
@@ -1684,6 +1867,20 @@ function buildFcCatSelect() {
     opt.textContent = catLabels[cat] + " (" + count + ")";
     sel.appendChild(opt);
   });
+}
+
+// Lance une session de révision ciblée sur une catégorie : bascule sur les
+// flashcards filtrées, fiches les moins maîtrisées en premier.
+function startCategoryReview(cat) {
+  setMode("flashcard", document.querySelector('[data-mode="flashcard"]'));
+  const sel = document.getElementById("fc-cat-select");
+  if (sel) sel.value = cat;
+  initFlashcards();
+  fcList = [...fcList].sort((a, b) => (levels[a.id] || 0) - (levels[b.id] || 0));
+  fcIndex = 0;
+  fcFlipped = false;
+  fcSeen = new Set();
+  renderFlashcard();
 }
 
 function initFlashcards() {
@@ -1834,24 +2031,37 @@ function renderStats() {
   const container = document.getElementById("cat-stats-container");
   container.innerHTML = "";
 
+  // Score de maîtrise par catégorie : moyenne des niveaux (0 pour une fiche jamais vue)
+  // ramenée en %. Trié du plus faible au plus fort pour prioriser les révisions.
+  const catStats = catOrder.map(cat => {
+    const fiches = FICHES.filter(f => f.cat === cat);
+    const total = fiches.length;
+    if (total === 0) return null;
+    const done = fiches.filter(f => seen.has(f.id)).length;
+    const mastered = fiches.filter(f => (levels[f.id] || 0) >= 4).length;
+    const avgLevel = fiches.reduce((s, f) => s + (levels[f.id] || 0), 0) / total;
+    const masteryPct = Math.round((avgLevel / 5) * 100);
+    return { cat, total, done, mastered, masteryPct };
+  }).filter(Boolean).sort((a, b) => a.masteryPct - b.masteryPct);
+
   if (seen.size === 0) {
-    container.innerHTML = '<div style="text-align:center;padding:2rem 1rem;color:var(--text3);font-size:14px">' +
+    container.innerHTML = '<div style="text-align:center;padding:1rem 1rem 1.5rem;color:var(--text3);font-size:14px">' +
       '📚 Commence à consulter des fiches pour voir ta progression par catégorie ici.</div>';
-    return;
   }
 
-  catOrder.forEach(cat => {
-    const total = FICHES.filter(f => f.cat === cat).length;
-    if (total === 0) return;
-    const done = FICHES.filter(f => f.cat === cat && seen.has(f.id)).length;
-    const mastered = FICHES.filter(f => f.cat === cat && (levels[f.id] || 0) >= 4).length;
-    const pct = Math.round((done / total) * 100);
+  catStats.forEach(({ cat, total, done, mastered, masteryPct }) => {
+    const color = masteryPct < 35 ? "#ef4444" : masteryPct < 70 ? "#f59e0b" : "var(--accent)";
     const row = document.createElement("div");
-    row.className = "cat-stat-row";
+    row.className = "cat-stat-row cat-stat-clickable";
+    row.setAttribute("role", "button");
+    row.setAttribute("tabindex", "0");
+    row.setAttribute("aria-label", "Réviser la catégorie " + catLabels[cat] + ", maîtrise " + masteryPct + "%");
+    row.onclick = () => startCategoryReview(cat);
+    row.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); startCategoryReview(cat); } };
     row.innerHTML = `<span class="cat-stat-label">${catLabels[cat]}</span>` +
-      `<div class="cat-stat-bar"><div class="cat-stat-fill" style="width:${pct}%"></div></div>` +
-      `<span class="cat-stat-pct">${pct}%</span>` +
-      `<span style="font-size:10px;color:var(--text3);width:54px;flex-shrink:0;text-align:right">${mastered}/${total} 🎯</span>`;
+      `<div class="cat-stat-bar"><div class="cat-stat-fill" style="width:${masteryPct}%;background:${color};box-shadow:0 0 8px ${color}"></div></div>` +
+      `<span class="cat-stat-pct" style="color:${color}">${masteryPct}%</span>` +
+      `<span style="font-size:10px;color:var(--text3);width:78px;flex-shrink:0;text-align:right">${done}/${total} vues · ${mastered} 🎯</span>`;
     container.appendChild(row);
   });
 }
@@ -1869,7 +2079,7 @@ function initPieges() {
   if (input && !input.dataset.bound) {
     input.dataset.bound = "1";
     input.addEventListener("input", () => {
-      piegesSearchTerm = input.value.trim().toLowerCase();
+      piegesSearchTerm = normalizeSearch(input.value);
       renderPieges();
     });
   }
@@ -1902,9 +2112,9 @@ function renderPieges() {
   if (piegesCatActive) list = list.filter(f => f.cat === piegesCatActive);
   if (piegesSearchTerm) {
     list = list.filter(f =>
-      f.titre.toLowerCase().includes(piegesSearchTerm) ||
-      f.piege.toLowerCase().includes(piegesSearchTerm) ||
-      (f.keywords || []).some(k => k.toLowerCase().includes(piegesSearchTerm))
+      normalizeSearch(f.titre).includes(piegesSearchTerm) ||
+      normalizeSearch(f.piege).includes(piegesSearchTerm) ||
+      (f.keywords || []).some(k => normalizeSearch(k).includes(piegesSearchTerm))
     );
   }
 
@@ -1972,6 +2182,16 @@ function setQuizCatActive(btn) {
   btn.classList.add("active");
 }
 
+// Pool de distracteurs partagé (Quiz + Examen blanc) : on privilégie la même
+// catégorie que la fiche pour des mauvaises réponses plus proches thématiquement
+// (donc plus discriminantes), avec repli sur toutes les fiches si la catégorie
+// n'en fournit pas assez.
+function distractorPool(f) {
+  const sameCat = FICHES.filter(x => x.id !== f.id && !x.is_cmd && x.cat === f.cat);
+  if (sameCat.length >= 3) return sameCat;
+  return FICHES.filter(x => x.id !== f.id && !x.is_cmd);
+}
+
 function buildQuestions() {
   const pool = [];
   let fichePool = FICHES.filter(f => !f.is_cmd);
@@ -1979,7 +2199,7 @@ function buildQuestions() {
   if (fichePool.length < 4) fichePool = FICHES.filter(f => !f.is_cmd);
 
   fichePool.forEach(f => {
-    const wrongDefs = shuffle(FICHES.filter(x => x.id !== f.id && !x.is_cmd))
+    const wrongDefs = shuffle(distractorPool(f))
       .slice(0, 3).map(x => x.def.substring(0, 90) + "…");
     pool.push({
       question: "Quelle est la bonne définition de <strong>" + f.titre + "</strong> ?",
@@ -1988,7 +2208,7 @@ function buildQuestions() {
       explanation: f.retenir,
       cat: f.cat
     });
-    const wrongPieges = shuffle(FICHES.filter(x => x.id !== f.id && !x.is_cmd))
+    const wrongPieges = shuffle(distractorPool(f))
       .slice(0, 3).map(x => x.piege);
     pool.push({
       question: "Quel est le piège classique concernant <strong>" + f.titre + "</strong> ?",
@@ -1997,7 +2217,7 @@ function buildQuestions() {
       explanation: f.retenir,
       cat: f.cat
     });
-    const wrongRetenir = shuffle(FICHES.filter(x => x.id !== f.id && !x.is_cmd))
+    const wrongRetenir = shuffle(distractorPool(f))
       .slice(0, 3).map(x => x.retenir);
     pool.push({
       question: "Que faut-il retenir en priorité sur <strong>" + f.titre + "</strong> ?",
@@ -2291,12 +2511,12 @@ let examStartTime = 0;
 function buildQuestionPool(fichePool) {
   const pool = [];
   fichePool.forEach(f => {
-    const wrongDefs = shuffle(FICHES.filter(x => x.id !== f.id && !x.is_cmd))
+    const wrongDefs = shuffle(distractorPool(f))
       .slice(0, 3).map(x => x.def.substring(0, 90) + "…");
     pool.push({ question:"Quelle est la bonne définition de <strong>"+f.titre+"</strong> ?", correct:f.def.substring(0,90)+"…", wrong:wrongDefs, explanation:f.retenir, cat:f.cat, ficheId:f.id });
-    const wrongPieges = shuffle(FICHES.filter(x => x.id !== f.id && !x.is_cmd)).slice(0,3).map(x => x.piege);
+    const wrongPieges = shuffle(distractorPool(f)).slice(0,3).map(x => x.piege);
     pool.push({ question:"Quel est le piège classique concernant <strong>"+f.titre+"</strong> ?", correct:f.piege, wrong:wrongPieges, explanation:f.retenir, cat:f.cat, ficheId:f.id });
-    const wrongRetenir = shuffle(FICHES.filter(x => x.id !== f.id && !x.is_cmd)).slice(0,3).map(x => x.retenir);
+    const wrongRetenir = shuffle(distractorPool(f)).slice(0,3).map(x => x.retenir);
     pool.push({ question:"Que faut-il retenir en priorité sur <strong>"+f.titre+"</strong> ?", correct:f.retenir, wrong:wrongRetenir, explanation:f.def.substring(0,120)+"…", cat:f.cat, ficheId:f.id });
   });
   return pool;

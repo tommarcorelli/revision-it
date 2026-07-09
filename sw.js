@@ -2,23 +2,24 @@
 // Le cache est invalidé automatiquement quand script.js ou style.css changent
 // (network-first sur les assets principaux, cache-first sur les icônes)
 
-const CACHE_NAME = "revision-it-v18";
+const CACHE_NAME = "revision-it-v30";
 const STATIC_ASSETS = [
   "./index.html",
-  "./style.css",
-  "./script.js",
-  "./data.js",
-  "./terminal-data.js",
-  "./logo.svg",
-  "./icons/icon-192.png",
-  "./icons/icon-512.png",
-  "./icons/icon-512-maskable.png",
-  "./icons/apple-touch-icon.png",
+  "./css/style.css",
+  "./js/script.js",
+  "./js/data.js",
+  "./js/terminal-data.js",
+  "./assets/logo.svg",
+  "./assets/icons/icon-192.png",
+  "./assets/icons/icon-512.png",
+  "./assets/icons/icon-512-maskable.png",
+  "./assets/icons/apple-touch-icon.png",
   "./manifest.json"
 ];
 
-// Installation : on met en cache uniquement les assets statiques (icônes, manifest)
-// Les fichiers JS/CSS/HTML sont gérés en network-first pour toujours avoir la dernière version
+// Installation : on précharge l'app shell (HTML/CSS/JS/données) et les icônes.
+// En pratique, HTML/JS/CSS sont ensuite servis en network-first (voir plus bas),
+// ce pré-cache ne sert que de filet de secours pour le tout premier chargement hors-ligne.
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))

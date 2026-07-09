@@ -10,11 +10,14 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Révision IT">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+<link rel="icon" href="assets/icons/icon-192.png" type="image/png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<!-- Fonts preconnect for perf -->
-<link rel="stylesheet" href="style.css">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Police chargée en non-bloquant : preload + bascule vers stylesheet une fois prêt -->
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap"></noscript>
+<link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
@@ -29,7 +32,7 @@
         <line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/>
       </svg>
     </button>
-    <img src="logo.svg" alt="Révision IT" />
+    <img src="assets/logo.svg" alt="Révision IT" />
     <span style="background:none;-webkit-text-fill-color:initial;color:var(--text);font-weight:700">Révision</span><span>IT</span>
   </div>
   <div class="nav-search-wrap">
@@ -60,6 +63,7 @@
         </div>
       </div>
     </div>
+    <button class="nav-btn" onclick="openShortcutsHelp()" title="Raccourcis clavier (?)" aria-label="Voir les raccourcis clavier">⌨️</button>
     <button class="nav-btn" onclick="openReset()" title="Paramètres" aria-label="Paramètres">⚙️</button>
     <button class="nav-btn" id="dark-toggle" onclick="toggleDark()" title="Thème clair / sombre" aria-label="Basculer le thème clair / sombre">🌙</button>
   </div>
@@ -107,6 +111,7 @@
       <div class="fiche-toolbar">
         <button class="weak-btn" id="weak-filter-btn" onclick="toggleWeakFilter(this)">⚠️ À revoir</button>
         <button class="fav-btn" id="fav-filter-btn" onclick="toggleFavFilter(this)">★ Favoris</button>
+        <button class="fav-btn" id="pdf-export-btn" onclick="exportFilteredToPDF()" title="Exporter les fiches affichées en PDF (via Imprimer → Enregistrer en PDF)" aria-label="Exporter les fiches affichées en PDF">🖨️ Export PDF</button>
         <select id="sort-select" onchange="renderCards()" class="sort-select">
           <option value="default">Défaut</option>
           <option value="level-asc">Niveau ↑</option>
@@ -183,7 +188,8 @@
     <!-- STATS -->
     <div id="stats-view" style="display:none">
       <div id="stats-summary"></div>
-      <div class="section-label" style="margin:1.5rem 0 1rem">Progression par catégorie</div>
+      <div class="section-label" style="margin:1.5rem 0 .25rem">Catégories à réviser en priorité</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:1rem">Triées de la plus faible à la plus maîtrisée · clique sur une catégorie pour la réviser</div>
       <div class="cat-stats" id="cat-stats-container"></div>
     </div>
 
@@ -224,16 +230,16 @@
 
 <!-- Overlay détail fiche -->
 <div class="overlay" id="overlay" onclick="handleOverlayClick(event)">
-  <div class="panel" id="panel">
+  <div class="panel" id="panel" role="dialog" aria-modal="true" aria-label="Détail de la fiche">
     <button class="close-btn" onclick="closeDetail()">✕ Fermer</button>
     <div id="detail-content"></div>
   </div>
 </div>
 
 <!-- Modal reset -->
-<div class="reset-modal" id="reset-modal">
+<div class="reset-modal" id="reset-modal" role="dialog" aria-modal="true" aria-labelledby="reset-modal-title">
   <div class="reset-box">
-    <h3>⚙️ Paramètres</h3>
+    <h3 id="reset-modal-title">⚙️ Paramètres</h3>
     <p>Choisis ce que tu veux effacer.</p>
     <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:1.25rem;text-align:left">
       <label style="font-size:13px;display:flex;align-items:center;gap:8px;cursor:pointer">
@@ -266,6 +272,7 @@
     <div class="shortcuts-section">
       <div class="shortcuts-title">⌨️ Raccourcis clavier</div>
       <div class="shortcuts-grid">
+        <span class="shortcut-key">?</span><span class="shortcut-desc">Afficher cette aide</span>
         <span class="shortcut-key">Échap</span><span class="shortcut-desc">Fermer panneau / modal</span>
         <span class="shortcut-key">/</span><span class="shortcut-desc">Ouvrir la recherche</span>
         <span class="shortcut-key">← →</span><span class="shortcut-desc">Fiche précédente / suivante</span>
@@ -283,7 +290,7 @@
 <div class="onboarding" id="onboarding" role="dialog" aria-labelledby="onboarding-title" aria-modal="false">
   <div class="onboarding-title" id="onboarding-title">👋 Bienvenue sur Révision IT</div>
   <div class="onboarding-text">
-    198 fiches, flashcards, quiz, examen blanc et un terminal simulé pour réviser l'informatique et la cybersécurité.<br>
+    220 fiches, flashcards, quiz, examen blanc et un terminal simulé pour réviser l'informatique et la cybersécurité.<br>
     Astuces : <kbd>/</kbd> pour rechercher · l'étoile ★ pour tes favoris · 🎯 <strong>Révision du jour</strong> sur l'accueil pour un lot priorisé · 🎨 pour changer la couleur.
   </div>
   <div class="onboarding-actions">
@@ -301,11 +308,14 @@
   <button class="tab-btn tab-more" onclick="toggleSidebar()" aria-label="Plus de modes"><span class="tab-ico">☰</span><span class="tab-lbl">Plus</span></button>
 </nav>
 
+<!-- Conteneur d'impression pour l'export PDF multi-fiches (rempli par exportFichesToPDF) -->
+<div id="print-export"></div>
+
 <!-- IDs legacy pour compatibilité script.js -->
 <span id="subtitle-text" style="display:none"></span>
 
-<script src="data.js"></script>
-<script src="terminal-data.js"></script>
-<script src="script.js"></script>
+<script src="js/data.js"></script>
+<script src="js/terminal-data.js"></script>
+<script src="js/script.js"></script>
 </body>
 </html>

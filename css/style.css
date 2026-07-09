@@ -3,7 +3,7 @@
    Light & Dark redesignés · Geist + JetBrains Mono
    ───────────────────────────────────────────────────────── */
 
-@import url('https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+/* Police chargée de façon non bloquante depuis index.html (voir <link rel="preload"> + fallback) */
 
 :root{
   /* LIGHT — "aurora" : mesh multicolore lumineux, glass blanc, ombres colorées */
@@ -381,6 +381,18 @@ html:not([data-theme="dark"]) .bg-orbs::before{
   cursor:pointer;font-weight:600;transition:all var(--transition);white-space:nowrap;
 }
 .detail-print:hover{border-color:var(--accent);color:var(--accent)}
+
+/* Toast (notification temporaire, ex: signalement d'erreur) */
+.app-toast{
+  position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);
+  background:var(--bg2);border:1px solid var(--border2);color:var(--text);
+  padding:10px 18px;border-radius:99px;font-size:13px;font-weight:600;
+  box-shadow:0 8px 24px rgba(0,0,0,.25);opacity:0;pointer-events:none;
+  transition:opacity .25s ease,transform .25s ease;z-index:9999;max-width:90vw;
+  text-align:center;
+}
+.app-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media(max-width:860px){.app-toast{bottom:76px}}
 
 /* Bannière Révision du jour */
 .daily-banner{
@@ -792,6 +804,8 @@ html:not([data-theme="dark"]) .card:hover{
 .cat-stats{display:flex;flex-direction:column;gap:10px}
 .cat-stat-row{background:var(--glass);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--glass-brd);border-radius:var(--radius);padding:.85rem 1.1rem;transition:all var(--transition)}
 .cat-stat-row:hover{border-color:var(--accent);transform:translateX(2px)}
+.cat-stat-clickable{cursor:pointer}
+.cat-stat-clickable:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .cat-stat-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
 .cat-stat-name{font-family:var(--sans);font-size:12.5px;font-weight:600;color:var(--text)}
 .cat-stat-nums{font-family:var(--mono);font-size:10.5px;color:var(--text3)}
@@ -873,7 +887,8 @@ html:not([data-theme="dark"]) .card:hover{
 .reset-box{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:2rem;max-width:420px;width:90%;text-align:center;box-shadow:var(--shadow-2);animation:fadeUp .35s cubic-bezier(.4,.2,.2,1);max-height:90vh;overflow-y:auto}
 .reset-box h3{font-family:var(--sans);font-size:17px;font-weight:800;margin-bottom:.5rem;color:var(--text);letter-spacing:-.01em}
 .reset-box p{font-size:12.5px;color:var(--text2);line-height:1.6;margin-bottom:1.5rem}
-.shortcuts-section{margin-top:1.5rem;text-align:left;border-top:1px solid var(--border);padding-top:1.25rem}
+.shortcuts-section{margin-top:1.5rem;text-align:left;border-top:1px solid var(--border);padding-top:1.25rem;border-radius:var(--radius);transition:background-color .4s ease}
+.shortcuts-section.shortcuts-highlight{background-color:var(--accent-light)}
 .shortcuts-title{font-family:var(--mono);font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.12em;margin-bottom:.85rem}
 .shortcuts-grid{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;align-items:center}
 .shortcut-key{font-family:var(--mono);font-size:10.5px;font-weight:700;background:var(--bg3);border:1px solid var(--border);border-radius:5px;padding:2px 7px;color:var(--accent);white-space:nowrap;justify-self:start}
@@ -889,16 +904,25 @@ html:not([data-theme="dark"]) .card:hover{
 .kbd-hint{font-family:var(--mono);font-size:10px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:2px 6px;color:var(--text2);vertical-align:middle}
 
 /* ── IMPRESSION / PDF ─────────────────────────────── */
+#print-export{display:none}
+.print-export-title{font-family:var(--sans);font-size:22px;margin-bottom:.25rem}
+.print-export-meta{font-size:12px;color:#666;margin-bottom:1.5rem}
+.print-fiche{margin-bottom:1.75rem;padding-bottom:1.5rem;border-bottom:1px solid #ddd}
+.print-fiche:last-child{border-bottom:none}
 @media print{
   *{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important}
   body{background:#fff !important;color:#000}
   body::before,body::after,.bg-orbs,.nav,.sidebar,.sidebar-backdrop,.onboarding,.accent-popover,.daily-banner{display:none !important}
   .layout{display:block;padding-top:0}
   .main{padding:0}
-  /* N'imprimer que la fiche ouverte */
-  .overlay.open{position:static;display:block;background:none;padding:0;inset:auto;overflow:visible}
-  .overlay.open .panel{box-shadow:none;border:none;max-width:100%;max-height:none;overflow:visible;margin:0;padding:0;border-radius:0}
-  .overlay:not(.open){display:none !important}
+  /* Export PDF multi-fiches : n'imprimer que le conteneur dédié */
+  body.printing-export .layout,body.printing-export .overlay{display:none !important}
+  body.printing-export #print-export{display:block !important}
+  body.printing-export .print-fiche{page-break-inside:avoid;break-inside:avoid}
+  /* Impression d'une fiche unique (bouton 🖨️ Imprimer du panneau détail) */
+  body:not(.printing-export) .overlay.open{position:static;display:block;background:none;padding:0;inset:auto;overflow:visible}
+  body:not(.printing-export) .overlay.open .panel{box-shadow:none;border:none;max-width:100%;max-height:none;overflow:visible;margin:0;padding:0;border-radius:0}
+  body:not(.printing-export) .overlay:not(.open){display:none !important}
   .close-btn,.panel-nav,.btn-done,.panel-level,.detail-top-actions,.card-fav,.related-grid,.detail-fav,.detail-print,.section-label::before{display:none !important}
   .section,.schema-box,.cmd-block{page-break-inside:avoid}
   .schema-box svg{max-width:100%;height:auto}
