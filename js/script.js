@@ -1272,14 +1272,20 @@ function buildCmdsHtml(cmds) {
 
 function buildFichePrintHtml(f) {
   const schemaHTML = f.schema ? '<div class="section"><div class="section-label">📊 Schéma</div><div class="schema-box">' + f.schema + '</div></div>' : "";
+  let extraTableHTML = "";
+  if (f.extra_table) {
+    let thead = f.extra_table_headers ? "<thead><tr>" + f.extra_table_headers.map(h => "<th>" + h + "</th>").join("") + "</tr></thead>" : "";
+    let tbody = "<tbody>" + f.extra_table.map(r => "<tr>" + r.map(c => "<td>" + c + "</td>").join("") + "</tr>").join("") + "</tbody>";
+    extraTableHTML = '<div class="section"><div class="section-label">Tableau de référence</div><table class="table-mini">' + thead + tbody + '</table></div>';
+  }
   let mainContent;
   if (f.is_cmd) {
     mainContent = '<div class="section"><div class="section-label">Définition</div><p class="def-text">' + f.def + '</p></div>' +
-      schemaHTML +
+      schemaHTML + extraTableHTML +
       '<div class="section"><div class="section-label">Commandes essentielles</div>' + buildCmdsHtml(f.cmds) + '</div>';
   } else {
     mainContent = '<div class="section"><div class="section-label">Définition</div><p class="def-text">' + f.def + '</p></div>' +
-      schemaHTML +
+      schemaHTML + extraTableHTML +
       '<div class="section"><div class="section-label">Points clés</div><ul class="key-list">' +
       (f.points || []).map(p => '<li>' + p + '</li>').join("") + '</ul></div>';
   }
@@ -2061,7 +2067,7 @@ function renderStats() {
     row.innerHTML = `<span class="cat-stat-label">${catLabels[cat]}</span>` +
       `<div class="cat-stat-bar"><div class="cat-stat-fill" style="width:${masteryPct}%;background:${color};box-shadow:0 0 8px ${color}"></div></div>` +
       `<span class="cat-stat-pct" style="color:${color}">${masteryPct}%</span>` +
-      `<span style="font-size:10px;color:var(--text3);width:78px;flex-shrink:0;text-align:right">${done}/${total} vues · ${mastered} 🎯</span>`;
+      `<span class="cat-stat-count">${done}/${total} vues · ${mastered} 🎯</span>`;
     container.appendChild(row);
   });
 }
