@@ -726,8 +726,6 @@ html:not([data-theme="dark"]) .card:hover{
 .quiz-container{background:var(--glass);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--glass-brd);border-radius:var(--radius-lg);padding:1.75rem;box-shadow:var(--shadow-2)}
 .quiz-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;flex-wrap:wrap;gap:.5rem}
 .quiz-q-num{font-family:var(--mono);font-size:10.5px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.1em}
-.quiz-timer{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--text);background:var(--bg3);border:1px solid var(--border);border-radius:99px;padding:5px 12px}
-.quiz-timer.warning{color:var(--red);border-color:var(--red);animation:pulse .8s ease infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
 .quiz-timer-bar{height:3px;background:var(--border);border-radius:99px;margin-bottom:1.25rem;overflow:hidden}
 .quiz-timer-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent3));transition:width 1s linear;box-shadow:0 0 8px var(--accent-glow)}
@@ -821,6 +819,8 @@ html:not([data-theme="dark"]) .card:hover{
 .cat-stat-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--accent),var(--accent3));transition:width .6s;box-shadow:0 0 8px var(--accent-glow)}
 .cat-stat-pct{font-family:var(--mono);font-size:13px;font-weight:700;flex:0 0 40px;text-align:right}
 .cat-stat-count{font-family:var(--mono);font-size:10px;color:var(--text3);flex:0 0 78px;text-align:right}
+.cat-stat-export{flex:0 0 auto;border:1px solid var(--border2);background:var(--bg3);color:var(--text2);border-radius:99px;padding:6px 9px;font-size:12px;cursor:pointer;line-height:1;transition:all var(--transition)}
+.cat-stat-export:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-light)}
 
 /* ── TERMINAL ────────────────────────────────────── */
 .term-header{display:flex;align-items:center;gap:.85rem;margin-bottom:.85rem;flex-wrap:wrap}
@@ -1060,8 +1060,9 @@ html:not([data-theme="dark"]) .card:hover{
   .quiz-question{font-size:14.5px}
   .quiz-trous-wrap{flex-direction:column}
   .quiz-trous-btn{padding:12px 16px}
-  .cat-stat-label{flex-basis:88px;font-size:12.5px}
-  .cat-stat-count{flex-basis:56px;font-size:9px}
+  .cat-stat-label{flex-basis:82px;font-size:12px}
+  .cat-stat-count{flex-basis:0;display:none}
+  .cat-stat-export{padding:6px 8px;font-size:11px}
   .flashcard-wrap{height:300px}
   .fc-main{font-size:17px}
   .panel{padding:1.1rem 1.1rem 1.5rem}

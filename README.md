@@ -28,6 +28,10 @@ Ordre de chargement des scripts : `js/data.js` → `js/terminal-data.js` → `js
 
 **Déduplication** : une passe de détection de similarité (indice de Jaccard sur les mots-clés) a identifié 2 doublons de contenu préexistants — fusionnés sans perte : `3901` (Load Balancing HAProxy, ex-3901+4948) et `4927` (Syslog, ex-4927+4936). Les autres paires détectées (FortiGate, Sauvegarde/PRA-PCA, EBIOS RM, SNMP, Terraform, QoS, RADIUS/802.1X) sont volontaires — pattern "fiche concept + fiche pratique/plateforme" déjà utilisé ailleurs (ex: PKI Entreprise scindée Architecture/openssl) — et ont été laissées telles quelles.
 
+**223 fiches** (id 5119–5121) : AD CS — attaques sur les services de certificats (ESC1/ESC4/ESC8, Certipy), Cloud Pentesting AWS/Azure (IAM, S3, IMDS/SSRF), Supply Chain Security (dependency confusion, typosquatting, SBOM). Vérifié sans recoupement avec le contenu existant (Attaques AD, Sécurité Cloud IAM, CI/CD Sécurisé/DevSecOps).
+
+**Validation XML complète des schémas** : les 182 fiches avec schéma SVG ont été parsées en XML strict pour vérifier leur bonne formation. 3 schémas préexistants (id 304, 4931, 4945) contenaient des caractères non échappés (`&`, `<`, entité HTML `&nbsp;` invalide en XML) — corrigés. Les 182 schémas passent maintenant la validation.
+
 ## Modes disponibles
 
 | Mode | Description |
@@ -160,4 +164,4 @@ Stratégie network-first sur `.html`, `.js`, `.css` (toujours la dernière versi
 
 **À chaque déploiement majeur** : monter le numéro de version dans `CACHE_NAME` de `sw.js` pour invalider le cache des utilisateurs existants.
 
-Version actuelle : `revision-it-v36`
+Version actuelle : `revision-it-v39`

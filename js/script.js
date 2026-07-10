@@ -2067,7 +2067,12 @@ function renderStats() {
     row.innerHTML = `<span class="cat-stat-label">${catLabels[cat]}</span>` +
       `<div class="cat-stat-bar"><div class="cat-stat-fill" style="width:${masteryPct}%;background:${color};box-shadow:0 0 8px ${color}"></div></div>` +
       `<span class="cat-stat-pct" style="color:${color}">${masteryPct}%</span>` +
-      `<span class="cat-stat-count">${done}/${total} vues · ${mastered} 🎯</span>`;
+      `<span class="cat-stat-count">${done}/${total} vues · ${mastered} 🎯</span>` +
+      `<button class="cat-stat-export" title="Exporter cette catégorie en PDF" aria-label="Exporter ${catLabels[cat]} en PDF">🖨️</button>`;
+    row.querySelector(".cat-stat-export").onclick = (e) => {
+      e.stopPropagation();
+      exportFichesToPDF(FICHES.filter(f => f.cat === cat), catLabels[cat]);
+    };
     container.appendChild(row);
   });
 }
