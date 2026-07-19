@@ -13,6 +13,32 @@ let favFilterOn = false;         // filtre "★ Favoris" actif
 let dailyReviewOn = false;       // mode "Révision du jour" actif
 let dailyList = [];              // fiches sélectionnées pour la révision du jour
 
+// ── Icônes SVG partagées (jeu de lignes cohérent, utilisé dans le HTML généré dynamiquement) ──
+const ICONS = {
+  target:  '<svg class="icon icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/></svg>',
+  repeat:  '<svg class="icon icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/></svg>',
+  terminal:'<svg class="icon icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="7 9 11 12.5 7 16"/><line x1="12" y1="16" x2="17" y2="16"/></svg>',
+  alert:   '<svg class="icon icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5 2.5 20h19L12 3.5Z"/><line x1="12" y1="9.5" x2="12" y2="14"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>',
+  clipboard:'<svg class="icon icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1"/><path d="M9 12.5 11 14.5 15.5 10"/></svg>',
+  grid:    '<svg class="icon icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>',
+  gear:    '<svg class="icon icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
+  check:   '<svg class="icon icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9.5 18 20 6"/></svg>',
+  flag:    '<svg class="icon icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4"/><path d="M5 4h13l-3 4.5L18 13H5"/></svg>',
+  printer: '<svg class="icon icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V4h12v5"/><rect x="4" y="9" width="16" height="7" rx="1.5"/><path d="M6 14.5v5.5h12v-5.5"/></svg>',
+  flame:   '<svg class="icon icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5c1 3-3 4.5-3 8a3 3 0 0 0 6 0c0-1-.4-1.8-1-2.5.7 2 .3 3-.5 3.7"/><path d="M8 13a4 4 0 1 0 8 0c0-2.5-2-3.5-2-6"/></svg>',
+  trophy:  '<svg class="icon icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h8v4a4 4 0 0 1-8 0V4Z"/><path d="M8 5H6a2 2 0 0 0 0 4h1.3M16 5h2a2 2 0 0 1 0 4h-1.3"/><path d="M12 12v3"/><path d="M9.5 20h5"/><path d="M10.2 17h3.6l.4 3h-4.4l.4-3Z"/></svg>',
+  stats1:  '<svg class="icon icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V11"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M2 20h20"/></svg>',
+  moon:    '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>',
+  sun:     '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2.5M12 19.5V22M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2 12h2.5M19.5 12H22M4.2 19.8 6 18M18 6l1.8-1.8"/></svg>',
+  globe:   '<svg class="icon icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3 12h18"/></svg>',
+  shield:  '<svg class="icon icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.3 19 6v6c0 4.5-3 7.4-7 8.7-4-1.3-7-4.2-7-8.7V6l7-2.7Z"/></svg>',
+  desktop: '<svg class="icon icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M8 20h8"/><path d="M12 16v4"/></svg>',
+  book:    '<svg class="icon icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2 2 0 0 1 6 4h6v16H6a2 2 0 0 0-2 1.5v-16Z"/><path d="M20 5.5A2 2 0 0 0 18 4h-6v16h6a2 2 0 0 1 2 1.5v-16Z"/></svg>',
+};
+// Petits emoji de niveau (flashcards/anki) remplacés par des étoiles pleines/vides pour rester cohérent avec le reste de l'UI
+const LEVEL_STARS = ["☆☆☆☆☆","★☆☆☆☆","★★☆☆☆","★★★☆☆","★★★★☆","★★★★★"];
+
+
 // Normalise une chaîne pour une recherche insensible à la casse ET aux accents
 // (ex: "securite" retrouve "Sécurité"). Utilisé par toutes les recherches de l'app.
 function normalizeSearch(s) {
@@ -320,10 +346,10 @@ function importProgress(event) {
         try { localStorage.setItem("revision_dark", data.dark); } catch(err){}
         if (data.dark === "1") {
           document.documentElement.setAttribute("data-theme","dark");
-          document.getElementById("dark-toggle").textContent = "☀️";
+          document.getElementById("dark-toggle").innerHTML = ICONS.sun;
         } else {
           document.documentElement.setAttribute("data-theme","");
-          document.getElementById("dark-toggle").textContent = "🌙";
+          document.getElementById("dark-toggle").innerHTML = ICONS.moon;
         }
       }
       closeReset();
@@ -347,7 +373,7 @@ function toggleDark() {
 function applyTheme(dark) {
   document.documentElement.setAttribute("data-theme", dark ? "dark" : "");
   const btn = document.getElementById("dark-toggle");
-  if (btn) btn.textContent = dark ? "☀️" : "🌙";
+  if (btn) btn.innerHTML = dark ? ICONS.sun : ICONS.moon;
   // Barre de statut du téléphone assortie au thème
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) meta.setAttribute("content", dark ? "#050814" : "#F7F9FF");
@@ -547,7 +573,7 @@ function buildTermTabs() {
   // Onglet scénarios
   const sBtn = document.createElement("button");
   sBtn.className = "term-tab term-tab-scenario" + (scenarioMode ? " active" : "");
-  sBtn.textContent = "🎯 Scénarios";
+  sBtn.innerHTML = ICONS.target + "Scénarios";
   sBtn.id = "term-tab-scenarios";
   sBtn.onclick = () => showScenarioMenu();
   tabsEl.appendChild(sBtn);
@@ -792,7 +818,7 @@ function buildTermHelp() {
   const examples = Object.keys(sh.commands).filter(k => k !== "help").slice(0, 24);
   help.innerHTML = examples.map(cmd =>
     `<div class="term-help-item" onclick="document.getElementById('term-input').value='${escHtml(cmd)}';document.getElementById('term-input').focus()"><code>${escHtml(cmd)}</code>cliquer pour tester</div>`
-  ).join("") + `<div class="term-help-item term-scenario-item" onclick="showScenarioMenu()"><code>🎯 Scénarios</code>exercices guidés</div>`;
+  ).join("") + `<div class="term-help-item term-scenario-item" onclick="showScenarioMenu()"><code>${ICONS.target}Scénarios</code>exercices guidés</div>`;
 }
 
 function debounce(fn, delay) {
@@ -1047,11 +1073,11 @@ function openCategory(cat) {
 
 // Groupement des catégories par thème
 const catGroups = [
-  { label:"🌐 Réseau", cats:["reseau","reseauavance","proto","cisco","wifi"] },
-  { label:"🛡️ Sécurité", cats:["secu","hacking","web","ad","crypto","wef"] },
-  { label:"⚙️ Administration", cats:["admin","linux","windows","devops","cloud","proxmox","virt"] },
-  { label:"📋 Méthodes & Normes", cats:["methodo","reglem","ebios","norme","superv","ia","bdd"] },
-  { label:"🖥️ Général & SISR", cats:["general","sisr","auto"] }
+  { label:`${ICONS.globe}Réseau`, cats:["reseau","reseauavance","proto","cisco","wifi"] },
+  { label:`${ICONS.shield}Sécurité`, cats:["secu","hacking","web","ad","crypto","wef"] },
+  { label:`${ICONS.gear}Administration`, cats:["admin","linux","windows","devops","cloud","proxmox","virt"] },
+  { label:`${ICONS.clipboard}Méthodes & Normes`, cats:["methodo","reglem","ebios","norme","superv","ia","bdd"] },
+  { label:`${ICONS.desktop}Général & SISR`, cats:["general","sisr","auto"] }
 ];
 
 function toggleWeakFilter(btn) {
@@ -1271,7 +1297,7 @@ function buildCmdsHtml(cmds) {
 }
 
 function buildFichePrintHtml(f) {
-  const schemaHTML = f.schema ? '<div class="section"><div class="section-label">📊 Schéma</div><div class="schema-box">' + f.schema + '</div></div>' : "";
+  const schemaHTML = f.schema ? '<div class="section"><div class="section-label">${ICONS.stats1}Schéma</div><div class="schema-box">' + f.schema + '</div></div>' : "";
   let extraTableHTML = "";
   if (f.extra_table) {
     let thead = f.extra_table_headers ? "<thead><tr>" + f.extra_table_headers.map(h => "<th>" + h + "</th>").join("") + "</tr></thead>" : "";
@@ -1294,8 +1320,8 @@ function buildFichePrintHtml(f) {
     '<h2 class="detail-title">' + escHtml(f.titre) + '</h2>' +
     '<p class="detail-sub">' + escHtml(f.sub || "") + '</p>' +
     mainContent +
-    (f.piege ? '<div class="section"><div class="section-label">⚠️ Piège classique</div><div class="piege-box">' + f.piege + '</div></div>' : "") +
-    (f.retenir ? '<div class="section"><div class="section-label">✅ À retenir</div><div class="retenir-box">' + f.retenir + '</div></div>' : "") +
+    (f.piege ? '<div class="section"><div class="section-label">${ICONS.alert}Piège classique</div><div class="piege-box">' + f.piege + '</div></div>' : "") +
+    (f.retenir ? '<div class="section"><div class="section-label">${ICONS.check}À retenir</div><div class="retenir-box">' + f.retenir + '</div></div>' : "") +
     '</article>';
 }
 
@@ -1406,7 +1432,7 @@ function openDetail(id, indexInFiltered) {
   }
 
   let mainContent = "";
-  const schemaHTML = f.schema ? '<div class="section"><div class="section-label">📊 Schéma</div><div class="schema-box">' + f.schema + '</div></div>' : "";
+  const schemaHTML = f.schema ? '<div class="section"><div class="section-label">${ICONS.stats1}Schéma</div><div class="schema-box">' + f.schema + '</div></div>' : "";
   if (f.is_cmd) {
     mainContent = '<div class="section"><div class="section-label">Définition</div><p class="def-text">' + f.def + '</p></div>' +
       schemaHTML +
@@ -1460,16 +1486,16 @@ function openDetail(id, indexInFiltered) {
     '<div class="detail-top">' +
     '<span class="detail-badge badge-' + f.cat + '">' + catLabels[f.cat] + '</span>' +
     '<div class="detail-top-actions">' +
-    '<button class="detail-print" onclick="reportFicheIssue(' + id + ')" title="Signaler une erreur sur cette fiche" aria-label="Signaler une erreur sur cette fiche">🚩 Signaler</button>' +
-    '<button class="detail-print" onclick="window.print()" title="Imprimer / PDF" aria-label="Imprimer cette fiche">🖨️ Imprimer</button>' +
+    '<button class="detail-print" onclick="reportFicheIssue(' + id + ')" title="Signaler une erreur sur cette fiche" aria-label="Signaler une erreur sur cette fiche">' + ICONS.flag + 'Signaler</button>' +
+    '<button class="detail-print" onclick="window.print()" title="Imprimer / PDF" aria-label="Imprimer cette fiche">' + ICONS.printer + 'Imprimer</button>' +
     '<button class="detail-fav' + (favOn ? ' on' : '') + '" id="detail-fav-' + id + '" onclick="toggleFavorite(' + id + ',event)">' + (favOn ? '★ Favori' : '☆ Favori') + '</button>' +
     '</div>' +
     '</div>' +
     '<h2 class="detail-title">' + f.titre + '</h2>' +
     '<p class="detail-sub">' + (f.sub || "") + '</p>' +
     mainContent +
-    '<div class="section"><div class="section-label">⚠️ Piège classique</div><div class="piege-box">' + f.piege + '</div></div>' +
-    '<div class="section"><div class="section-label">✅ À retenir</div><div class="retenir-box">' + f.retenir + '</div></div>' +
+    '<div class="section"><div class="section-label">${ICONS.alert}Piège classique</div><div class="piege-box">' + f.piege + '</div></div>' +
+    '<div class="section"><div class="section-label">${ICONS.check}À retenir</div><div class="retenir-box">' + f.retenir + '</div></div>' +
     '<div class="section"><div class="section-label">Mots-clés</div><div class="kw-grid">' +
     f.keywords.map(k => '<span class="kw">' + k + '</span>').join("") + '</div></div>' +
     relatedHtml +
@@ -1721,7 +1747,7 @@ function renderHome() {
         return `<div class="home-recent-card" onclick="setMode('fiches',document.querySelector('[data-mode=fiches]'));openDetail(${f.id})">
           <span class="detail-badge badge-${f.cat}" style="margin-bottom:6px">${catLabels[f.cat]}</span>
           <div class="home-recent-title">${escHtml(f.titre)}</div>
-          ${lv ? `<div class="home-recent-lv" style="color:${lvColor}">${['','★','★★','★★★','★★★★','🎯'][lv]}</div>` : ''}
+          ${lv ? `<div class="home-recent-lv" style="color:${lvColor}">${['','★','★★','★★★','★★★★','★★★★★'][lv]}</div>` : ''}
         </div>`;
       }).join('')}
     </div>`;
@@ -1756,6 +1782,14 @@ function renderHome() {
       }).join('')}
     </div>`;
 
+  const firstRunHtml = (catScores.length === 0 && recentIds.length === 0) ? `
+    <div class="home-empty-state">
+      <div class="home-empty-icon">${ICONS.grid}</div>
+      <div class="home-empty-title">Ta première session commence ici</div>
+      <div class="home-empty-sub">Ouvre une fiche, lance un quiz rapide ou pioche un scénario terminal — tes catégories à renforcer et ton historique apparaîtront ici au fil de tes révisions.</div>
+      <button class="home-empty-cta" onclick="setMode('fiches',document.querySelector('[data-mode=fiches]'))">Parcourir les ${total} fiches →</button>
+    </div>` : '';
+
   el.innerHTML = `
     <div class="home-wrap">
       <div class="home-hero">
@@ -1763,8 +1797,8 @@ function renderHome() {
         <h1 class="home-title">Bonjour 👋 <span class="grad">prêt à réviser ?</span></h1>
         <p class="home-tagline">Ton espace <strong>Info · Cybersécurité · SISR</strong> — ${total} fiches, ${typeof TERM_SCENARIOS !== "undefined" ? TERM_SCENARIOS.length : 14} scénarios de terminal, quiz, flashcards & répétition espacée.</p>
         <p class="home-sub">${due > 0
-          ? `<span style="color:var(--red)">🔴 ${due} fiche${due>1?"s":""} due${due>1?"s":""} en Anki</span>`
-          : `<span style="color:var(--green)">✅ Aucune révision Anki en retard</span>`}</p>
+          ? `<span style="color:var(--red)">${ICONS.alert} ${due} fiche${due>1?"s":""} due${due>1?"s":""} en Anki</span>`
+          : `<span style="color:var(--green)">${ICONS.check} Aucune révision Anki en retard</span>`}</p>
       </div>
       <div class="home-progress-card">
         <div class="home-ring">
@@ -1784,12 +1818,12 @@ function renderHome() {
         </div>
         <div class="home-progress-info">
           <div class="home-progress-title">${n} / ${total} fiches vues</div>
-          <div class="home-progress-sub">🎯 ${mastered} maîtrisées &nbsp;·&nbsp; ⚠️ ${weak} à revoir &nbsp;·&nbsp; 🏆 ${best ? best+"%" : "—"}</div>
+          <div class="home-progress-sub">${ICONS.target} ${mastered} maîtrisées &nbsp;·&nbsp; ${ICONS.alert} ${weak} à revoir &nbsp;·&nbsp; ${ICONS.trophy} ${best ? best+"%" : "—"}</div>
         </div>
       </div>
       <div class="home-actions">
         <button class="home-action primary" onclick="startDailyReview()">
-          <div class="ha-icon">🎯</div>
+          <div class="ha-icon">${ICONS.target}</div>
           <div class="ha-body">
             <div class="ha-title">Révision du jour</div>
             <div class="ha-sub">Lot priorisé : dues, faibles, favoris</div>
@@ -1797,42 +1831,43 @@ function renderHome() {
           </div>
         </button>
         <button class="home-action" onclick="setMode('anki', document.querySelector('[data-mode=anki]'))">
-          <div class="ha-icon">🧠</div>
+          <div class="ha-icon">${ICONS.repeat}</div>
           <div class="ha-body">
             <div class="ha-title">Réviser Anki</div>
             <div class="ha-sub">Répétition espacée SM-2</div>
-            ${due > 0 ? `<span class="ha-badge">🔴 ${due} due${due>1?"s":""}</span>` : ""}
+            ${due > 0 ? `<span class="ha-badge"><span class="status-dot"></span> ${due} due${due>1?"s":""}</span>` : ""}
           </div>
         </button>
         <button class="home-action" onclick="setMode('exam', document.querySelector('[data-mode=exam]'))">
-          <div class="ha-icon">📝</div>
+          <div class="ha-icon">${ICONS.clipboard}</div>
           <div class="ha-body"><div class="ha-title">Examen Blanc</div><div class="ha-sub">Multi-catégories · bilan complet</div></div>
         </button>
         <button class="home-action" onclick="setMode('quiz', document.querySelector('[data-mode=quiz]'))">
-          <div class="ha-icon">🎯</div>
+          <div class="ha-icon">${ICONS.target}</div>
           <div class="ha-body"><div class="ha-title">Quiz rapide</div><div class="ha-sub">25 questions · 30s</div></div>
         </button>
         <button class="home-action" onclick="setMode('pieges', document.querySelector('[data-mode=pieges]'))">
-          <div class="ha-icon">⚠️</div>
+          <div class="ha-icon">${ICONS.alert}</div>
           <div class="ha-body"><div class="ha-title">Pièges</div><div class="ha-sub">${FICHES.filter(f=>f.piege).length} pièges classiques</div></div>
         </button>
         <button class="home-action" onclick="setMode('fiches', document.querySelector('[data-mode=fiches]'))">
-          <div class="ha-icon">📋</div>
+          <div class="ha-icon">${ICONS.grid}</div>
           <div class="ha-body"><div class="ha-title">Fiches</div><div class="ha-sub">${total} disponibles</div></div>
         </button>
         <button class="home-action" onclick="setMode('terminal', document.querySelector('[data-mode=terminal]'))">
-          <div class="ha-icon">💻</div>
+          <div class="ha-icon">${ICONS.terminal}</div>
           <div class="ha-body"><div class="ha-title">Terminal</div><div class="ha-sub">${typeof TERM_SCENARIOS !== "undefined" ? TERM_SCENARIOS.length : 10} scénarios guidés</div></div>
         </button>
       </div>
       <div class="home-stats">
-        <div class="home-stat"><div class="home-stat-label">Fiches vues</div><div class="home-stat-value" data-count="${n}">0</div></div>
-        <div class="home-stat"><div class="home-stat-label">Maîtrisées</div><div class="home-stat-value" style="color:var(--green)" data-count="${mastered}">0</div></div>
-        <div class="home-stat"><div class="home-stat-label">Dues Anki</div><div class="home-stat-value" style="color:${due>0?"var(--red)":"var(--green)"}" data-count="${due}">0</div></div>
-        <div class="home-stat"><div class="home-stat-label">Meilleur quiz</div><div class="home-stat-value">${best ? best+"%" : "—"}</div></div>
+        <div class="home-stat"><div class="home-stat-label">${ICONS.book}Fiches vues</div><div class="home-stat-value" data-count="${n}">0</div></div>
+        <div class="home-stat"><div class="home-stat-label">${ICONS.target}Maîtrisées</div><div class="home-stat-value" style="color:var(--green)" data-count="${mastered}">0</div></div>
+        <div class="home-stat"><div class="home-stat-label">${due>0?ICONS.alert:ICONS.check}Dues Anki</div><div class="home-stat-value" style="color:${due>0?"var(--red)":"var(--green)"}" data-count="${due}">0</div></div>
+        <div class="home-stat"><div class="home-stat-label">${ICONS.trophy}Meilleur quiz</div><div class="home-stat-value">${best ? best+"%" : "—"}</div></div>
       </div>
       ${weakCatsHtml}
       ${recentHtml}
+      ${firstRunHtml}
     </div>
   `;
   // Compteurs animés (0 → valeur) sur les stats de l'accueil
@@ -2015,10 +2050,10 @@ function renderStatsSummary() {
 
   el.innerHTML =
     `<div class="stat-cards">
-       <div class="stat-card"><div class="stat-card-label">🔥 Série</div><div class="stat-card-value">${streak}</div><div class="stat-card-sub">jour${streak>1?'s':''} d'affilée</div></div>
-       <div class="stat-card"><div class="stat-card-label">📖 Fiches vues</div><div class="stat-card-value">${seenN}</div><div class="stat-card-sub">/ ${total}</div></div>
-       <div class="stat-card"><div class="stat-card-label">🎯 Maîtrisées</div><div class="stat-card-value">${mastered}</div><div class="stat-card-sub">niveau ≥ 4</div></div>
-       <div class="stat-card"><div class="stat-card-label">🏆 Record quiz</div><div class="stat-card-value">${best || 0}%</div><div class="stat-card-sub">meilleur score</div></div>
+       <div class="stat-card"><div class="stat-card-label">${ICONS.flame}Série</div><div class="stat-card-value">${streak}</div><div class="stat-card-sub">jour${streak>1?'s':''} d'affilée</div></div>
+       <div class="stat-card"><div class="stat-card-label">${ICONS.book}Fiches vues</div><div class="stat-card-value">${seenN}</div><div class="stat-card-sub">/ ${total}</div></div>
+       <div class="stat-card"><div class="stat-card-label">${ICONS.target}Maîtrisées</div><div class="stat-card-value">${mastered}</div><div class="stat-card-sub">niveau ≥ 4</div></div>
+       <div class="stat-card"><div class="stat-card-label">${ICONS.trophy}Record quiz</div><div class="stat-card-value">${best || 0}%</div><div class="stat-card-sub">meilleur score</div></div>
      </div>
      <div class="stat-panels">
        <div class="stat-panel">
@@ -2068,7 +2103,7 @@ function renderStats() {
       `<div class="cat-stat-bar"><div class="cat-stat-fill" style="width:${masteryPct}%;background:${color};box-shadow:0 0 8px ${color}"></div></div>` +
       `<span class="cat-stat-pct" style="color:${color}">${masteryPct}%</span>` +
       `<span class="cat-stat-count">${done}/${total} vues · ${mastered} 🎯</span>` +
-      `<button class="cat-stat-export" title="Exporter cette catégorie en PDF" aria-label="Exporter ${catLabels[cat]} en PDF">🖨️</button>`;
+      `<button class="cat-stat-export" title="Exporter cette catégorie en PDF" aria-label="Exporter ${catLabels[cat]} en PDF">${ICONS.printer}</button>`;
     row.querySelector(".cat-stat-export").onclick = (e) => {
       e.stopPropagation();
       exportFichesToPDF(FICHES.filter(f => f.cat === cat), catLabels[cat]);
@@ -2143,7 +2178,7 @@ function renderPieges() {
         ${seen.has(f.id) ? '<span class="piege-seen-tag">✓ vue</span>' : ''}
       </div>
       <div class="piege-card-title">${escHtml(f.titre)}</div>
-      <div class="piege-card-text">⚠️ ${escHtml(f.piege)}</div>
+      <div class="piege-card-text">${ICONS.alert}${escHtml(f.piege)}</div>
     </div>
   `).join("");
 }
@@ -2372,7 +2407,7 @@ function renderQuestion() {
         const r = quizCatResults[cat];
         const p = Math.round((r.correct / r.total) * 100);
         const color = p >= 80 ? 'var(--green)' : p >= 50 ? '#f59e0b' : '#ef4444';
-        const hint = p < 50 ? ' <span style="color:#ef4444;font-size:10px;font-weight:700">⚠️ à retravailler</span>' : '';
+        const hint = p < 50 ? ' <span style="color:#ef4444;font-size:10px;font-weight:700">' + ICONS.alert + 'à retravailler</span>' : '';
         const label = (catLabels[cat] || cat);
         return `<div class="quiz-cat-row">
           <span class="quiz-cat-row-label" title="${label}">${label}${hint}</span>
@@ -2381,7 +2416,7 @@ function renderQuestion() {
         </div>`;
       }).join('');
       breakdownHtml = `<div class="quiz-cat-breakdown">
-        <div class="quiz-cat-breakdown-title">📊 Résultats par catégorie</div>
+        <div class="quiz-cat-breakdown-title">${ICONS.stats1}Résultats par catégorie</div>
         ${rows}
       </div>`;
     }
@@ -2537,7 +2572,7 @@ function showExamStart() {
   const area = document.getElementById("exam-area");
   area.innerHTML =
     '<div class="quiz-header">' +
-      '<div class="quiz-info">📝 <strong>Mode Examen Blanc</strong> — Questions tirées de toutes les catégories, sans correction immédiate. Pas de retour en arrière une fois lancé.</div>' +
+      '<div class="quiz-info">' + ICONS.clipboard + '<strong>Mode Examen Blanc</strong> — Questions tirées de toutes les catégories, sans correction immédiate. Pas de retour en arrière une fois lancé.</div>' +
       '<div class="quiz-settings">' +
         '<select class="quiz-count-select" id="exam-count"><option value="20">20 Q</option><option value="40" selected>40 Q</option><option value="60">60 Q</option><option value="100">100 Q</option><option value="0">Toutes</option></select>' +
         '<select class="quiz-count-select" id="exam-timer-sel"><option value="0">Sans timer</option><option value="20">20s / Q</option><option value="30" selected>30s / Q</option><option value="45">45s / Q</option><option value="60">60s / Q</option></select>' +
@@ -2668,12 +2703,12 @@ function examFinish() {
     const r = examCatResults[cat];
     const p = Math.round((r.correct / r.total) * 100);
     const color = p >= 80 ? 'var(--green)' : p >= 50 ? '#f59e0b' : '#ef4444';
-    const hint = p < 50 ? ' <span style="color:#ef4444;font-size:10px;font-weight:700">⚠️ à retravailler</span>' : '';
+    const hint = p < 50 ? ' <span style="color:#ef4444;font-size:10px;font-weight:700">' + ICONS.alert + 'à retravailler</span>' : '';
     return '<div class="quiz-cat-row"><span class="quiz-cat-row-label">'+(catLabels[cat]||cat)+hint+'</span><div class="quiz-cat-row-bar"><div class="quiz-cat-row-fill" style="width:'+p+'%;background:'+color+'"></div></div><span class="quiz-cat-row-pct">'+r.correct+'/'+r.total+' · '+p+'%</span></div>';
   }).join('');
   const seenFiches = new Set();
   const wrongHtml = examWrongList.filter(w => { if (!w.ficheId || seenFiches.has(w.ficheId)) return false; seenFiches.add(w.ficheId); return true; }).length === 0 ? '' :
-    '<div class="quiz-cat-breakdown"><div class="quiz-cat-breakdown-title">📋 Fiches à revoir</div>' +
+    '<div class="quiz-cat-breakdown"><div class="quiz-cat-breakdown-title">' + ICONS.grid + 'Fiches à revoir</div>' +
     [...seenFiches].map(id => {
       const f = FICHES.find(x => x.id === id);
       if (!f) return '';
@@ -2682,7 +2717,7 @@ function examFinish() {
   area.innerHTML = '<div class="quiz-end">' +
     '<div class="big-score">'+pct+'%</div>' +
     '<div class="score-label">'+examScore+' / '+examQuestions.length+' bonnes réponses &nbsp;·&nbsp; '+mins+'min'+(secs<10?'0':'')+secs+'s<br>'+(passed?'✅ <strong style="color:var(--green)">Réussi</strong>':'❌ <strong style="color:#ef4444">Échoué</strong>')+' (seuil 70%)</div>' +
-    '<div class="quiz-cat-breakdown"><div class="quiz-cat-breakdown-title">📊 Résultats par catégorie</div>'+rows+'</div>' +
+    '<div class="quiz-cat-breakdown"><div class="quiz-cat-breakdown-title">${ICONS.stats1}Résultats par catégorie</div>'+rows+'</div>' +
     wrongHtml +
     '<button class="quiz-restart" onclick="showExamStart()">🔄 Nouvel examen</button>' +
     '</div>';

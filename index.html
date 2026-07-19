@@ -44,14 +44,14 @@
     <button class="search-close" onclick="toggleMobileSearch(false)" aria-label="Fermer la recherche">✕</button>
   </div>
   <div class="nav-right">
-    <button class="nav-btn nav-search-toggle" onclick="toggleMobileSearch(true)" title="Rechercher" aria-label="Rechercher">🔍</button>
+    <button class="nav-btn nav-search-toggle" onclick="toggleMobileSearch(true)" title="Rechercher" aria-label="Rechercher"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button>
     <div class="stat-chip">Fiches : <span id="stat-total">0</span></div>
     <div class="stat-chip">Vues : <span id="stat-seen">0</span></div>
     <div class="stat-chip">Maîtrisées : <span id="stat-mastered">0</span></div>
     <div class="accent-menu-wrap">
-      <button class="nav-btn" id="accent-toggle" onclick="toggleAccentMenu(event)" title="Couleur d'accent" aria-label="Choisir la couleur d'accent" aria-haspopup="true">🎨</button>
+      <button class="nav-btn" id="accent-toggle" onclick="toggleAccentMenu(event)" title="Couleur d'accent" aria-label="Choisir la couleur d'accent" aria-haspopup="true"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 2-.9 2-2 0-.5-.2-1-.5-1.3-.3-.4-.5-.8-.5-1.2 0-.9.7-1.5 1.5-1.5H17a4 4 0 0 0 4-4c0-4.4-4-8-9-8Z"/><circle cx="7.5" cy="11" r="1.1" fill="currentColor" stroke="none"/><circle cx="11.5" cy="7.2" r="1.1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="9.5" r="1.1" fill="currentColor" stroke="none"/></svg></button>
       <div class="accent-popover" id="accent-popover">
-        <div class="accent-popover-title">🎨 Couleur d'accent</div>
+        <div class="accent-popover-title"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 2-.9 2-2 0-.5-.2-1-.5-1.3-.3-.4-.5-.8-.5-1.2 0-.9.7-1.5 1.5-1.5H17a4 4 0 0 0 4-4c0-4.4-4-8-9-8Z"/><circle cx="7.5" cy="11" r="1.1" fill="currentColor" stroke="none"/><circle cx="11.5" cy="7.2" r="1.1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="9.5" r="1.1" fill="currentColor" stroke="none"/></svg> Couleur d'accent</div>
         <div class="accent-swatches" id="accent-swatches-nav">
           <button class="accent-dot" title="Bleu"     onclick="setAccent('')"        data-accent="" style="background:#2563EB"></button>
           <button class="accent-dot" title="Émeraude" onclick="setAccent('emerald')" data-accent="emerald" style="background:#059669"></button>
@@ -63,9 +63,9 @@
         </div>
       </div>
     </div>
-    <button class="nav-btn" onclick="openShortcutsHelp()" title="Raccourcis clavier (?)" aria-label="Voir les raccourcis clavier">⌨️</button>
-    <button class="nav-btn" onclick="openReset()" title="Paramètres" aria-label="Paramètres">⚙️</button>
-    <button class="nav-btn" id="dark-toggle" onclick="toggleDark()" title="Thème clair / sombre" aria-label="Basculer le thème clair / sombre">🌙</button>
+    <button class="nav-btn" onclick="openShortcutsHelp()" title="Raccourcis clavier (?)" aria-label="Voir les raccourcis clavier"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="6" y1="9.5" x2="6" y2="9.5"/><line x1="10" y1="9.5" x2="10" y2="9.5"/><line x1="14" y1="9.5" x2="14" y2="9.5"/><line x1="18" y1="9.5" x2="18" y2="9.5"/><line x1="7" y1="14.5" x2="17" y2="14.5"/></svg></button>
+    <button class="nav-btn" onclick="openReset()" title="Paramètres" aria-label="Paramètres"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+    <button class="nav-btn" id="dark-toggle" onclick="toggleDark()" title="Thème clair / sombre" aria-label="Basculer le thème clair / sombre"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg></button>
   </div>
 </nav>
 
@@ -80,15 +80,15 @@
     <div class="sidebar-section">
       <div class="sidebar-label">// MODE</div>
       <div class="mode-list">
-        <button class="mode-pill active" onclick="setMode('home',this)" data-mode="home">🏠 Accueil</button>
-        <button class="mode-pill" onclick="setMode('fiches',this)" data-mode="fiches">📋 Fiches</button>
-        <button class="mode-pill" onclick="setMode('flashcard',this)" data-mode="flashcard">🃏 Flashcards</button>
-        <button class="mode-pill" onclick="setMode('quiz',this)" data-mode="quiz">🎯 Quiz</button>
-        <button class="mode-pill" onclick="setMode('anki',this)" data-mode="anki">🧠 Anki SRS</button>
-        <button class="mode-pill" onclick="setMode('terminal',this)" data-mode="terminal">💻 Terminal</button>
-        <button class="mode-pill" onclick="setMode('stats',this)" data-mode="stats">📊 Stats</button>
-        <button class="mode-pill" onclick="setMode('pieges',this)" data-mode="pieges">⚠️ Pièges</button>
-        <button class="mode-pill" onclick="setMode('exam',this)" data-mode="exam">📝 Examen Blanc</button>
+        <button class="mode-pill active" onclick="setMode('home',this)" data-mode="home"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h3v-6h4v6h3a1 1 0 0 0 1-1v-9"/></svg> Accueil</button>
+        <button class="mode-pill" onclick="setMode('fiches',this)" data-mode="fiches"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg> Fiches</button>
+        <button class="mode-pill" onclick="setMode('flashcard',this)" data-mode="flashcard"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="13" height="9" rx="1.6"/><rect x="8" y="11" width="13" height="9" rx="1.6"/></svg> Flashcards</button>
+        <button class="mode-pill" onclick="setMode('quiz',this)" data-mode="quiz"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/></svg> Quiz</button>
+        <button class="mode-pill" onclick="setMode('anki',this)" data-mode="anki"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/></svg> Anki SRS</button>
+        <button class="mode-pill" onclick="setMode('terminal',this)" data-mode="terminal"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="7 9 11 12.5 7 16"/><line x1="12" y1="16" x2="17" y2="16"/></svg> Terminal</button>
+        <button class="mode-pill" onclick="setMode('stats',this)" data-mode="stats"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V11"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M2 20h20"/></svg> Stats</button>
+        <button class="mode-pill" onclick="setMode('pieges',this)" data-mode="pieges"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5 2.5 20h19L12 3.5Z"/><line x1="12" y1="9.5" x2="12" y2="14"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg> Pièges</button>
+        <button class="mode-pill" onclick="setMode('exam',this)" data-mode="exam"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1"/><path d="M9 12.5 11 14.5 15.5 10"/></svg> Examen Blanc</button>
       </div>
     </div>
 
@@ -109,9 +109,9 @@
     <!-- FICHES -->
     <div id="fiche-view">
       <div class="fiche-toolbar">
-        <button class="weak-btn" id="weak-filter-btn" onclick="toggleWeakFilter(this)">⚠️ À revoir</button>
+        <button class="weak-btn" id="weak-filter-btn" onclick="toggleWeakFilter(this)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5 2.5 20h19L12 3.5Z"/><line x1="12" y1="9.5" x2="12" y2="14"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg> À revoir</button>
         <button class="fav-btn" id="fav-filter-btn" onclick="toggleFavFilter(this)">★ Favoris</button>
-        <button class="fav-btn" id="pdf-export-btn" onclick="exportFilteredToPDF()" title="Exporter les fiches affichées en PDF (via Imprimer → Enregistrer en PDF)" aria-label="Exporter les fiches affichées en PDF">🖨️ Export PDF</button>
+        <button class="fav-btn" id="pdf-export-btn" onclick="exportFilteredToPDF()" title="Exporter les fiches affichées en PDF (via Imprimer → Enregistrer en PDF)" aria-label="Exporter les fiches affichées en PDF"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V4h12v5"/><rect x="4" y="9" width="16" height="7" rx="1.5"/><path d="M6 14.5v5.5h12v-5.5"/></svg> Export PDF</button>
         <select id="sort-select" onchange="renderCards()" class="sort-select">
           <option value="default">Défaut</option>
           <option value="level-asc">Niveau ↑</option>
@@ -123,7 +123,7 @@
       </div>
       <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
       <div class="daily-banner" id="daily-banner" style="display:none">
-        <span class="daily-banner-text">🎯 <strong>Révision du jour</strong> — <span class="daily-count">0</span> fiches priorisées (dues, faibles, favorites)</span>
+        <span class="daily-banner-text"><svg class="icon icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/></svg><strong>Révision du jour</strong> — <span class="daily-count">0</span> fiches priorisées (dues, faibles, favorites)</span>
         <button class="daily-exit" onclick="exitDailyReview()">✕ Quitter</button>
       </div>
       <div class="cards-grid" id="cards-grid"></div>
@@ -136,7 +136,7 @@
         <select class="fc-cat-select" id="fc-cat-select" onchange="initFlashcards()">
           <option value="all">Toutes les catégories</option>
         </select>
-        <button class="mode-btn" onclick="shuffleFlashcards()">🔀 Mélanger</button>
+        <button class="mode-btn" onclick="shuffleFlashcards()"><svg class="icon icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h3.5l7 12H21"/><path d="M3 18h3.5l2.4-4.1"/><path d="M14 6h7"/><path d="M17.5 3 21 6l-3.5 3"/><path d="M17.5 21 21 18l-3.5-3"/></svg>Mélanger</button>
         <span class="fc-counter" id="fc-counter"></span>
       </div>
       <div class="flashcard-wrap" onclick="flipCard()" id="fc-wrap">
@@ -181,7 +181,7 @@
           </select>
         </div>
       </div>
-      <div class="quiz-info">🎯 <strong>Mode Quiz</strong> — Choisis une catégorie et clique sur la bonne réponse.</div>
+      <div class="quiz-info"><svg class="icon icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/></svg><strong>Mode Quiz</strong> — Choisis une catégorie et clique sur la bonne réponse.</div>
       <div id="quiz-area"></div>
     </div>
 
@@ -196,7 +196,7 @@
     <!-- PIÈGES -->
     <div id="pieges-view" style="display:none">
       <div class="pieges-toolbar">
-        <div class="pieges-info">⚠️ <strong>Pièges à connaître</strong> — Tous les pièges classiques regroupés en un seul endroit. Clique sur une carte pour ouvrir la fiche complète.</div>
+        <div class="pieges-info"><svg class="icon icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5 2.5 20h19L12 3.5Z"/><line x1="12" y1="9.5" x2="12" y2="14"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg><strong>Pièges à connaître</strong> — Tous les pièges classiques regroupés en un seul endroit. Clique sur une carte pour ouvrir la fiche complète.</div>
         <input class="search-box pieges-search" type="text" id="pieges-search" placeholder="Filtrer les pièges…" autocomplete="off">
       </div>
       <div class="pieges-cat-filter" id="pieges-cat-filter"></div>
@@ -239,7 +239,7 @@
 <!-- Modal reset -->
 <div class="reset-modal" id="reset-modal" role="dialog" aria-modal="true" aria-labelledby="reset-modal-title">
   <div class="reset-box">
-    <h3 id="reset-modal-title">⚙️ Paramètres</h3>
+    <h3 id="reset-modal-title"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> Paramètres</h3>
     <p>Choisis ce que tu veux effacer.</p>
     <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:1.25rem;text-align:left">
       <label style="font-size:13px;display:flex;align-items:center;gap:8px;cursor:pointer">
@@ -251,15 +251,15 @@
     </div>
     <div class="reset-actions">
       <button class="reset-cancel" onclick="closeReset()">Annuler</button>
-      <button class="reset-confirm" onclick="confirmReset()">🗑️ Réinitialiser</button>
+      <button class="reset-confirm" onclick="confirmReset()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M6 7l1 12.5A2 2 0 0 0 9 21.3h6a2 2 0 0 0 2-1.8L18 7"/><path d="M9.5 7V4.3A1 1 0 0 1 10.5 3.3h3a1 1 0 0 1 1 1V7"/><path d="M10 11v6M14 11v6"/></svg> Réinitialiser</button>
     </div>
     <div class="reset-actions" style="margin-top:8px">
-      <button class="reset-cancel" onclick="exportProgress()">📤 Exporter</button>
-      <button class="reset-cancel" onclick="triggerImportProgress()">📥 Importer</button>
+      <button class="reset-cancel" onclick="exportProgress()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v11"/><path d="M8 7l4-4 4 4"/><path d="M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></svg> Exporter</button>
+      <button class="reset-cancel" onclick="triggerImportProgress()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v11"/><path d="M8 10l4 4 4-4"/><path d="M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></svg> Importer</button>
     </div>
     <input type="file" id="import-progress-input" accept="application/json" style="display:none" onchange="importProgress(event)">
     <div class="accent-section">
-      <div class="accent-title">🎨 Couleur d'accent</div>
+      <div class="accent-title"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 2-.9 2-2 0-.5-.2-1-.5-1.3-.3-.4-.5-.8-.5-1.2 0-.9.7-1.5 1.5-1.5H17a4 4 0 0 0 4-4c0-4.4-4-8-9-8Z"/><circle cx="7.5" cy="11" r="1.1" fill="currentColor" stroke="none"/><circle cx="11.5" cy="7.2" r="1.1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="9.5" r="1.1" fill="currentColor" stroke="none"/></svg> Couleur d'accent</div>
       <div class="accent-swatches" id="accent-swatches">
         <button class="accent-dot" title="Bleu"     onclick="setAccent('')"        data-accent="" style="background:#2563EB"></button>
         <button class="accent-dot" title="Émeraude" onclick="setAccent('emerald')" data-accent="emerald" style="background:#059669"></button>
@@ -270,7 +270,7 @@
       </div>
     </div>
     <div class="shortcuts-section">
-      <div class="shortcuts-title">⌨️ Raccourcis clavier</div>
+      <div class="shortcuts-title"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="6" y1="9.5" x2="6" y2="9.5"/><line x1="10" y1="9.5" x2="10" y2="9.5"/><line x1="14" y1="9.5" x2="14" y2="9.5"/><line x1="18" y1="9.5" x2="18" y2="9.5"/><line x1="7" y1="14.5" x2="17" y2="14.5"/></svg> Raccourcis clavier</div>
       <div class="shortcuts-grid">
         <span class="shortcut-key">?</span><span class="shortcut-desc">Afficher cette aide</span>
         <span class="shortcut-key">Échap</span><span class="shortcut-desc">Fermer panneau / modal</span>
@@ -291,7 +291,7 @@
   <div class="onboarding-title" id="onboarding-title">👋 Bienvenue sur Révision IT</div>
   <div class="onboarding-text">
     223 fiches, flashcards, quiz, examen blanc et un terminal simulé pour réviser l'informatique et la cybersécurité.<br>
-    Astuces : <kbd>/</kbd> pour rechercher · l'étoile ★ pour tes favoris · 🎯 <strong>Révision du jour</strong> sur l'accueil pour un lot priorisé · 🎨 pour changer la couleur.
+    Astuces : <kbd>/</kbd> pour rechercher · l'étoile ★ pour tes favoris · <svg class="icon icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/></svg><strong>Révision du jour</strong> sur l'accueil pour un lot priorisé · icône palette pour changer la couleur.
   </div>
   <div class="onboarding-actions">
     <button class="onboarding-btn primary" onclick="dismissOnboarding()">C'est parti !</button>
@@ -300,12 +300,12 @@
 
 <!-- Barre d'onglets mobile (cachée sur desktop) -->
 <nav class="tabbar" aria-label="Navigation principale">
-  <button class="tab-btn active" data-mode="home" onclick="setMode('home',this)"><span class="tab-ico">🏠</span><span class="tab-lbl">Accueil</span></button>
-  <button class="tab-btn" data-mode="fiches" onclick="setMode('fiches',this)"><span class="tab-ico">📋</span><span class="tab-lbl">Fiches</span></button>
-  <button class="tab-btn" data-mode="quiz" onclick="setMode('quiz',this)"><span class="tab-ico">🎯</span><span class="tab-lbl">Quiz</span></button>
-  <button class="tab-btn" data-mode="anki" onclick="setMode('anki',this)"><span class="tab-ico">🧠</span><span class="tab-lbl">Anki</span></button>
-  <button class="tab-btn" data-mode="terminal" onclick="setMode('terminal',this)"><span class="tab-ico">💻</span><span class="tab-lbl">Terminal</span></button>
-  <button class="tab-btn tab-more" onclick="toggleSidebar()" aria-label="Plus de modes"><span class="tab-ico">☰</span><span class="tab-lbl">Plus</span></button>
+  <button class="tab-btn active" data-mode="home" onclick="setMode('home',this)"><span class="tab-ico"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h3v-6h4v6h3a1 1 0 0 0 1-1v-9"/></svg></span><span class="tab-lbl">Accueil</span></button>
+  <button class="tab-btn" data-mode="fiches" onclick="setMode('fiches',this)"><span class="tab-ico"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span><span class="tab-lbl">Fiches</span></button>
+  <button class="tab-btn" data-mode="quiz" onclick="setMode('quiz',this)"><span class="tab-ico"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/></svg></span><span class="tab-lbl">Quiz</span></button>
+  <button class="tab-btn" data-mode="anki" onclick="setMode('anki',this)"><span class="tab-ico"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/></svg></span><span class="tab-lbl">Anki</span></button>
+  <button class="tab-btn" data-mode="terminal" onclick="setMode('terminal',this)"><span class="tab-ico"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="7 9 11 12.5 7 16"/><line x1="12" y1="16" x2="17" y2="16"/></svg></span><span class="tab-lbl">Terminal</span></button>
+  <button class="tab-btn tab-more" onclick="toggleSidebar()" aria-label="Plus de modes"><span class="tab-ico"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg></span><span class="tab-lbl">Plus</span></button>
 </nav>
 
 <!-- Conteneur d'impression pour l'export PDF multi-fiches (rempli par exportFichesToPDF) -->
