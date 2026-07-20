@@ -23,6 +23,7 @@ const ICONS = {
   grid:    '<svg class="icon icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>',
   gear:    '<svg class="icon icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
   check:   '<svg class="icon icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9.5 18 20 6"/></svg>',
+  cross:   '<svg class="icon icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6 6 18"/></svg>',
   flag:    '<svg class="icon icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4"/><path d="M5 4h13l-3 4.5L18 13H5"/></svg>',
   printer: '<svg class="icon icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V4h12v5"/><rect x="4" y="9" width="16" height="7" rx="1.5"/><path d="M6 14.5v5.5h12v-5.5"/></svg>',
   flame:   '<svg class="icon icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5c1 3-3 4.5-3 8a3 3 0 0 0 6 0c0-1-.4-1.8-1-2.5.7 2 .3 3-.5 3.7"/><path d="M8 13a4 4 0 1 0 8 0c0-2.5-2-3.5-2-6"/></svg>',
@@ -882,10 +883,10 @@ function init() {
         <div class="anki-dots" id="anki-dots"></div>
       </div>
       <div class="anki-done" id="anki-done" style="display:none">
-        <div class="anki-done-icon">🎉</div>
+        <div class="anki-done-icon">${ICONS.trophy}</div>
         <div class="anki-done-title">Session terminée !</div>
         <div class="anki-done-sub" id="anki-done-sub"></div>
-        <button class="anki-restart-btn" onclick="initAnki()">🔄 Recommencer</button>
+        <button class="anki-restart-btn" onclick="initAnki()">${ICONS.repeat}Recommencer</button>
       </div>
     `;
     main.appendChild(ankiView);
@@ -1092,6 +1093,22 @@ function toggleFavFilter(btn) {
   renderCards();
 }
 
+// Remet la vue Fiches à plat : vide la recherche, les filtres transverses,
+// le tri et la sélection de catégorie. Appelé depuis le bouton de l'état vide.
+function resetFichesFilters() {
+  const sb = document.getElementById("search-box"); if (sb) sb.value = "";
+  const sortSel = document.getElementById("sort-select"); if (sortSel) sortSel.value = "default";
+  weakFilterOn = false;
+  favFilterOn = false;
+  currentFilter = "all";
+  if (dailyReviewOn) exitDailyReview(true);
+  document.getElementById("weak-filter-btn")?.classList.remove("active");
+  document.getElementById("fav-filter-btn")?.classList.remove("active");
+  document.querySelectorAll(".filter-btn, .filter-all, .filter-sub, .filter-group-btn").forEach(b => b.classList.remove("active"));
+  document.querySelector(".filter-all")?.classList.add("active");
+  renderCards();
+}
+
 // ── Révision du jour : lot priorisé (dues Anki > faibles > jamais vues) ──
 function buildDailyList(limit) {
   limit = limit || 20;
@@ -1178,6 +1195,19 @@ function renderCards() {
 
   filteredList = filtered;
   noRes.style.display = filtered.length === 0 ? "block" : "none";
+  if (filtered.length === 0) {
+    const hasSearch = !!search;
+    const hasFilters = weakFilterOn || favFilterOn || currentFilter !== "all" || dailyReviewOn;
+    let msg, icon = ICONS.grid;
+    if (hasSearch) { msg = `Aucune fiche ne correspond à « ${escHtml(document.getElementById("search-box").value)} ».`; icon = ICONS.target; }
+    else if (favFilterOn) { msg = "Tu n'as encore aucune fiche en favoris. Clique sur l'étoile d'une fiche pour l'ajouter ici."; }
+    else if (weakFilterOn) { msg = "Aucune fiche à revoir pour l'instant — bien joué !"; icon = ICONS.check; }
+    else { msg = "Aucune fiche ne correspond à ces critères."; }
+    noRes.innerHTML =
+      `<div class="no-results-icon">${icon}</div>` +
+      `<div class="no-results-msg">${msg}</div>` +
+      ((hasSearch || hasFilters) ? `<button class="no-results-reset" onclick="resetFichesFilters()">Réinitialiser les filtres</button>` : "");
+  }
 
   // Compteur de la barre : nombre de résultats pendant une recherche/filtre
   const navCount = document.getElementById("nav-count");
@@ -1228,7 +1258,7 @@ function renderCards() {
             `<span class="section-cat-count">${doneCat}/${catItems.length}</span>`;
           grid.appendChild(catSep);
 
-          catItems.forEach(f => grid.appendChild(makeCard(f, filtered.indexOf(f))));
+          catItems.forEach(f => grid.appendChild(makeCard(f, filtered.indexOf(f), true)));
         });
       }
     });
@@ -1247,21 +1277,24 @@ function highlightTerm(text, term) {
   } catch(e) { return safe; }
 }
 
-function makeCard(f, idx) {
+function makeCard(f, idx, inGroup) {
   const div = document.createElement("div");
   const lv = levels[f.id] || 0;
-  div.className = "card" + (seen.has(f.id) ? " done" : "") + (lv ? " level-" + lv : "");
+  div.className = "card" + (seen.has(f.id) ? " done" : "") + (lv ? " level-" + lv : "") + (inGroup ? " in-group" : "");
   div.onclick = () => openDetail(f.id, idx);
   const stars = [1,2,3,4,5].map(i => `<span class="star${i<=lv?' on':''}">★</span>`).join("");
   const fav = isFavorite(f.id);
   const q = (document.getElementById("search-box").value || "").trim();
   div.innerHTML =
     '<button class="card-fav' + (fav ? ' on' : '') + '" onclick="toggleFavorite(' + f.id + ',event)" title="' + (fav ? 'Retirer des favoris' : 'Ajouter aux favoris') + '" aria-label="Favori">' + (fav ? '★' : '☆') + '</button>' +
-    (seen.has(f.id) ? '<span class="card-done-mark">✓</span>' : "") +
-    '<span class="card-badge badge-' + f.cat + '">' + catLabels[f.cat] + '</span>' +
+    (seen.has(f.id) ? '<span class="card-done-mark">' + ICONS.check + '</span>' : "") +
+    // Le badge de catégorie est redondant quand la carte est déjà sous son en-tête
+    // de catégorie (vue groupée par défaut) — on ne l'affiche que dans les vues
+    // mélangées (recherche, favoris, à revoir, tri, révision du jour).
+    (inGroup ? "" : '<span class="card-badge badge-' + f.cat + '">' + catLabels[f.cat] + '</span>') +
     '<div class="card-title">' + highlightTerm(f.titre, q) + '</div>' +
     '<div class="card-desc">' + highlightTerm(f.sub || "", q) + '</div>' +
-    '<div class="card-level">' + stars + '</div>';
+    '<div class="card-level" title="Niveau de maîtrise : ' + lv + '/5">' + stars + '</div>';
   return div;
 }
 
@@ -1949,7 +1982,7 @@ function renderFlashcard() {
   document.getElementById("fc-front-text").textContent = f.titre;
   document.getElementById("fc-front-sub").textContent = f.sub || catLabels[f.cat];
   document.getElementById("fc-back-text").textContent = f.def;
-  document.getElementById("fc-back-sub").textContent = "✅ " + f.retenir;
+  document.getElementById("fc-back-sub").innerHTML = ICONS.check + escHtml(f.retenir);
   document.getElementById("fc-counter").textContent = (fcIndex+1) + " / " + fcList.length;
   document.getElementById("fc-prev").disabled = fcIndex === 0;
   document.getElementById("fc-next").disabled = fcIndex === fcList.length - 1;
@@ -2033,7 +2066,7 @@ function renderStatsSummary() {
   // Courbe des derniers quiz (mini histogramme)
   let quizHtml;
   if (history.length === 0) {
-    quizHtml = '<div class="stat-empty">Aucun quiz terminé pour l\'instant. Lance un quiz pour suivre ta progression ici.</div>';
+    quizHtml = `<div class="stat-empty">${ICONS.target}Aucun quiz terminé pour l'instant. Lance un quiz pour suivre ta progression ici.</div>`;
   } else {
     const bars = history.map(h => {
       const col = h.pct >= 80 ? "#22c55e" : h.pct >= 60 ? "#f59e0b" : "#ef4444";
@@ -2087,7 +2120,7 @@ function renderStats() {
 
   if (seen.size === 0) {
     container.innerHTML = '<div style="text-align:center;padding:1rem 1rem 1.5rem;color:var(--text3);font-size:14px">' +
-      '📚 Commence à consulter des fiches pour voir ta progression par catégorie ici.</div>';
+      ICONS.book + 'Commence à consulter des fiches pour voir ta progression par catégorie ici.</div>';
   }
 
   catStats.forEach(({ cat, total, done, mastered, masteryPct }) => {
@@ -2102,7 +2135,7 @@ function renderStats() {
     row.innerHTML = `<span class="cat-stat-label">${catLabels[cat]}</span>` +
       `<div class="cat-stat-bar"><div class="cat-stat-fill" style="width:${masteryPct}%;background:${color};box-shadow:0 0 8px ${color}"></div></div>` +
       `<span class="cat-stat-pct" style="color:${color}">${masteryPct}%</span>` +
-      `<span class="cat-stat-count">${done}/${total} vues · ${mastered} 🎯</span>` +
+      `<span class="cat-stat-count">${done}/${total} vues · ${mastered} ${ICONS.target}</span>` +
       `<button class="cat-stat-export" title="Exporter cette catégorie en PDF" aria-label="Exporter ${catLabels[cat]} en PDF">${ICONS.printer}</button>`;
     row.querySelector(".cat-stat-export").onclick = (e) => {
       e.stopPropagation();
@@ -2392,8 +2425,10 @@ function renderQuestion() {
     recordQuizResult(pct, quizQuestions.length);
     markActivityToday();
     document.getElementById("stat-quiz").textContent = pct + "%";
-    const emoji = pct >= 80 ? "🎉" : pct >= 60 ? "💪" : "📚";
+    const tierIcon = pct >= 80 ? ICONS.trophy : pct >= 60 ? ICONS.flame : ICONS.book;
     const msg = pct >= 80 ? "Excellent travail !" : pct >= 60 ? "Bon travail, continue !" : "Continue à réviser les fiches.";
+    const ringColor = pct >= 80 ? "var(--green)" : pct >= 60 ? "#F59E0B" : "#EF4444";
+    const ringR = 70, ringCirc = +(2*Math.PI*ringR).toFixed(1), ringDash = +(ringCirc*pct/100).toFixed(1);
 
     // Build per-category breakdown
     const cats = Object.keys(quizCatResults).sort((a,b) => {
@@ -2422,10 +2457,18 @@ function renderQuestion() {
     }
 
     area.innerHTML = '<div class="quiz-end">' +
-      '<div class="big-score">' + pct + '%</div>' +
-      '<div class="score-label">' + quizScore + ' / ' + quizQuestions.length + ' bonnes réponses<br>' + emoji + ' ' + msg + '</div>' +
+      `<div class="quiz-end-ring">
+         <svg width="176" height="176" viewBox="0 0 176 176">
+           <circle cx="88" cy="88" r="${ringR}" fill="none" stroke="var(--border)" stroke-width="10"/>
+           <circle cx="88" cy="88" r="${ringR}" fill="none" stroke="${ringColor}" stroke-width="10"
+             stroke-dasharray="${ringDash} ${ringCirc}" stroke-linecap="round" transform="rotate(-90 88 88)"
+             style="filter:drop-shadow(0 0 8px ${ringColor}66)"/>
+         </svg>
+         <div class="quiz-end-ring-inner"><div class="big-score">${pct}%</div><div class="quiz-end-ring-icon" style="color:${ringColor}">${tierIcon}</div></div>
+       </div>` +
+      '<div class="score-label">' + quizScore + ' / ' + quizQuestions.length + ' bonnes réponses<br>' + msg + '</div>' +
       breakdownHtml +
-      '<button class="quiz-restart" onclick="startQuiz()">🔄 Recommencer</button>' +
+      '<button class="quiz-restart" onclick="startQuiz()">' + ICONS.repeat + 'Recommencer</button>' +
       '</div>';
     return;
   }
@@ -2500,9 +2543,9 @@ function submitTrous() {
   const feedback = document.getElementById("quiz-trous-feedback");
   if (feedback) {
     if (isCorrect) {
-      feedback.innerHTML = '<span class="trous-ok">✅ Correct ! <strong>' + escHtml(q.correct) + '</strong></span>';
+      feedback.innerHTML = '<span class="trous-ok">' + ICONS.check + 'Correct ! <strong>' + escHtml(q.correct) + '</strong></span>';
     } else {
-      feedback.innerHTML = '<span class="trous-ko">❌ Faux. La bonne réponse était : <strong>' + escHtml(q.correct) + '</strong></span>';
+      feedback.innerHTML = '<span class="trous-ko">' + ICONS.cross + 'Faux. La bonne réponse était : <strong>' + escHtml(q.correct) + '</strong></span>';
     }
   }
 
@@ -2714,12 +2757,23 @@ function examFinish() {
       if (!f) return '';
       return '<div class="piege-card" style="margin-bottom:8px;cursor:pointer" onclick="setMode(\'fiches\',null);openDetail('+f.id+')"><div class="piege-card-head"><span class="detail-badge badge-'+f.cat+'">'+catLabels[f.cat]+'</span></div><div class="piege-card-title">'+escHtml(f.titre)+'</div></div>';
     }).join('') + '</div>';
+  const ringColor = passed ? "var(--green)" : "#EF4444";
+  const ringR = 70, ringCirc = +(2*Math.PI*ringR).toFixed(1), ringDash = +(ringCirc*pct/100).toFixed(1);
+  const resultIcon = passed ? ICONS.check : ICONS.alert;
   area.innerHTML = '<div class="quiz-end">' +
-    '<div class="big-score">'+pct+'%</div>' +
-    '<div class="score-label">'+examScore+' / '+examQuestions.length+' bonnes réponses &nbsp;·&nbsp; '+mins+'min'+(secs<10?'0':'')+secs+'s<br>'+(passed?'✅ <strong style="color:var(--green)">Réussi</strong>':'❌ <strong style="color:#ef4444">Échoué</strong>')+' (seuil 70%)</div>' +
-    '<div class="quiz-cat-breakdown"><div class="quiz-cat-breakdown-title">${ICONS.stats1}Résultats par catégorie</div>'+rows+'</div>' +
+    `<div class="quiz-end-ring">
+       <svg width="176" height="176" viewBox="0 0 176 176">
+         <circle cx="88" cy="88" r="${ringR}" fill="none" stroke="var(--border)" stroke-width="10"/>
+         <circle cx="88" cy="88" r="${ringR}" fill="none" stroke="${ringColor}" stroke-width="10"
+           stroke-dasharray="${ringDash} ${ringCirc}" stroke-linecap="round" transform="rotate(-90 88 88)"
+           style="filter:drop-shadow(0 0 8px ${ringColor}66)"/>
+       </svg>
+       <div class="quiz-end-ring-inner"><div class="big-score">${pct}%</div><div class="quiz-end-ring-icon" style="color:${ringColor}">${resultIcon}</div></div>
+     </div>` +
+    '<div class="score-label">'+examScore+' / '+examQuestions.length+' bonnes réponses &nbsp;·&nbsp; '+mins+'min'+(secs<10?'0':'')+secs+'s<br>'+(passed?'<strong style="color:var(--green)">Réussi</strong>':'<strong style="color:#ef4444">Échoué</strong>')+' (seuil 70%)</div>' +
+    `<div class="quiz-cat-breakdown"><div class="quiz-cat-breakdown-title">${ICONS.stats1}Résultats par catégorie</div>${rows}</div>` +
     wrongHtml +
-    '<button class="quiz-restart" onclick="showExamStart()">🔄 Nouvel examen</button>' +
+    '<button class="quiz-restart" onclick="showExamStart()">' + ICONS.repeat + 'Nouvel examen</button>' +
     '</div>';
 }
 
@@ -2785,7 +2839,7 @@ function renderAnkiCard() {
   document.getElementById("anki-front-text").textContent = f.titre;
   document.getElementById("anki-front-sub").textContent = f.sub || catLabels[f.cat];
   document.getElementById("anki-back-def").textContent = f.def;
-  document.getElementById("anki-back-retenir").textContent = "✅ " + f.retenir;
+  document.getElementById("anki-back-retenir").innerHTML = ICONS.check + escHtml(f.retenir);
 
   // Prévisualisation des intervalles sur les boutons
   const d = srsData[f.id] || { interval: 1, easeFactor: 2.5, reps: 0 };
@@ -2850,9 +2904,9 @@ function updateAnkiStats() {
   if (!row) return;
   row.innerHTML =
     `<div class="anki-stat-chip ${due > 0 ? 'chip-due' : 'chip-ok'}">📬 ${due} due${due > 1 ? 's' : ''}</div>` +
-    `<div class="anki-stat-chip">📚 ${totalSrs} vues</div>` +
-    `<div class="anki-stat-chip chip-green">🎯 ${mastered} maîtrisées</div>` +
-    (ankiSessionStats.done > 0 ? `<div class="anki-stat-chip">✅ Session : ${ankiSessionStats.done}</div>` : "");
+    `<div class="anki-stat-chip">${ICONS.book}${totalSrs} vues</div>` +
+    `<div class="anki-stat-chip chip-green">${ICONS.target}${mastered} maîtrisées</div>` +
+    (ankiSessionStats.done > 0 ? `<div class="anki-stat-chip">${ICONS.check}Session : ${ankiSessionStats.done}</div>` : "");
 }
 
 function renderAnkiDots() {
@@ -2877,7 +2931,7 @@ function showAnkiDone() {
   const s = ankiSessionStats;
   const sub = document.getElementById("anki-done-sub");
   if (ankiQueue.length === 0) {
-    sub.innerHTML = "Aucune fiche à réviser pour le moment. 🏖️<br><small>Reviens plus tard ou désactive le filtre « Dues seulement ».</small>";
+    sub.innerHTML = `${ICONS.check}Aucune fiche à réviser pour le moment.<br><small>Reviens plus tard ou désactive le filtre « Dues seulement ».</small>`;
   } else {
     sub.innerHTML =
       `${s.done} fiches révisées · ` +
